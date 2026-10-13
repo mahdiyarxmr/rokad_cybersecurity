@@ -14,6 +14,7 @@
 </p>
 
 <p align="center">
+  <a href="#بخش-امنیت"><strong>[بخش امنیت]</strong></a> •
   <a href="README.md"><strong>[🇬🇧 Read in English]</strong></a> •
   <a href="CHANGELOG.md"><strong>[تغییرات نسخه‌ها]</strong></a> •
   <a href="ROADMAP.md"><strong>[نقشه راه فنی]</strong></a> •
