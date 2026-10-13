@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json.schemastore.org/liara.json",
+  "app": "rokad-api",
+  "platform": "node",
+  "port": 3000
+}

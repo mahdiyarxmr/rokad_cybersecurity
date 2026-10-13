@@ -1,0 +1,88 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate:
+    name: Lint, Build & Test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: rokad_user
+          POSTGRES_PASSWORD: rokad_secret_2026
+          POSTGRES_DB: rokad_test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate Prisma Schema & Generate Client
+        run: |
+          npx prisma validate
+          pnpm prisma:generate
+
+      - name: Build Backend (NestJS)
+        run: pnpm build
+
+      - name: Build Frontend (React Vite PWA)
+        run: pnpm --filter rokad-frontend build
+
+      - name: Run Unit Tests
+        env:
+          NODE_ENV: test
+          DATABASE_URL: "postgresql://rokad_user:rokad_secret_2026@localhost:5432/rokad_test_db?schema=public"
+          JWT_SECRET: "ci_test_jwt_secret_rokad_key_12345678"
+          MASTER_ENCRYPTION_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+          BLIND_INDEX_PEPPER: "test_blind_index_pepper_value_ci"
+        run: |
+          pnpm test -- --passWithNoTests

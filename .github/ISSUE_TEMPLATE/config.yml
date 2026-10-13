@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🔒 گزارش آسیب‌پذیری امنیتی (Security Vulnerability)
+    url: https://github.com/Rokad-Studio/Rokad-Platform/security/advisories/new
+    about: جهت گزارش آسیب‌پذیری‌های امنیتی به صورت محرمانه
+  - name: 📚 مستندات تعاملی Swagger API
+    url: http://localhost:4000/api/docs
+    about: مرور ساختار DTOها و متدهای API در محیط محلی

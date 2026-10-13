@@ -1,0 +1,1070 @@
+@import './fonts.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   ROKAD DESIGN TOKENS
+   ========================================================================== */
+@layer base {
+  :root {
+    /* Brand semantic aliases */
+    --color-primary: #59BBAF;
+    --color-girl: #E0195B;
+    --color-third: #F8A41D;
+    --color-sec: #202A5A;
+    --color-club: #8A38F5;
+    --text-normal: #292827;
+    --font-family: 'IRANSansXFaNum', 'IRANSansX', sans-serif;
+
+    /* Default Theme: Ecosystem */
+    --theme-light: #EEF8F7;
+    --theme-light-hover: #E6F5F3;
+    --theme-light-active: #CCEAE6;
+    --theme-normal: #59BBAF;
+    --theme-normal-hover: #50A89E;
+    --theme-normal-active: #47968C;
+    --theme-dark: #438C83;
+    --theme-dark-hover: #357069;
+    --theme-dark-active: #28544F;
+    --theme-darker: #1F413D;
+    --theme-shadow: 2.75px 2.75px 0 #59BBAF;
+
+    /* Neutral ink */
+    --text-light: #EAEAE9;
+    --text-light-hover: #DFDFDF;
+    --text-light-active: #BDBCBC;
+    --text-normal: #292827;
+    --text-normal-hover: #252423;
+    --text-normal-active: #21201F;
+    --text-dark: #1F1E1D;
+    --text-darker: #0E0E0E;
+
+    /* Accents */
+    --accent-green: #009966;
+    --accent-red: #C60036;
+    --accent-purple: #8A38F5;
+
+    /* --------------------------------------------------------------------
+       Semantic surface tokens (new) — a first step toward not hard-coding
+       bg-white / text-gray-900 everywhere. New components should reach for
+       these instead of raw Tailwind gray/white utilities; existing
+       components keep working via the class-hunting dark-mode overrides
+       below until they're migrated.
+       -------------------------------------------------------------------- */
+    --surface: #FFFFFF;
+    --surface-sunken: #F8F9FA;
+    --surface-raised: #FFFFFF;
+    --border-subtle: #E5E7EB;
+    --border-default: #D1D5DB;
+
+    /* Toast system tokens — deliberately separate from --theme-shadow.
+       Toasts are transient; they should announce themselves calmly and
+       leave, not carry the same permanent structural weight as a button
+       or card. See the dedicated Toast section below for the reasoning. */
+    --toast-shadow: 0 10px 30px -8px rgba(15, 23, 42, 0.18), 0 2px 8px rgba(15, 23, 42, 0.06);
+    --toast-radius: 14px;
+    --toast-bottom-offset: calc(64px + env(safe-area-inset-bottom, 0px) + 16px);
+  }
+
+  [data-sonner-toaster][data-y-position='bottom'] {
+    --offset-bottom: var(--toast-bottom-offset);
+  }
+
+  [data-theme='male'] {
+    --theme-light: #E9EAEF;
+    --theme-light-hover: #DEDFE6;
+    --theme-light-active: #BABDCC;
+    --theme-normal: #202A5A;
+    --theme-normal-hover: #1D2651;
+    --theme-normal-active: #1A2248;
+    --theme-dark: #182044;
+    --theme-dark-hover: #131936;
+    --theme-dark-active: #0E1328;
+    --theme-darker: #0B0F1F;
+    --theme-shadow: 2.75px 2.75px 0 #202A5A;
+  }
+
+  [data-theme='female'] {
+    --theme-light: #FCE8EF;
+    --theme-light-hover: #FADDE6;
+    --theme-light-active: #F5B8CC;
+    --theme-normal: #E0195B;
+    --theme-normal-hover: #CA1752;
+    --theme-normal-active: #B31449;
+    --theme-dark: #A81344;
+    --theme-dark-hover: #860F37;
+    --theme-dark-active: #650B29;
+    --theme-darker: #4E0920;
+    --theme-shadow: 2.75px 2.75px 0 #E0195B;
+  }
+
+  [data-theme='college'] {
+    --theme-light: #FEF6E8;
+    --theme-light-hover: #FEF1DD;
+    --theme-light-active: #FDE3B9;
+    --theme-normal: #F8A41D;
+    --theme-normal-hover: #DF941A;
+    --theme-normal-active: #C68317;
+    --theme-dark: #BA7B16;
+    --theme-dark-hover: #956211;
+    --theme-dark-active: #704A0D;
+    --theme-darker: #57390A;
+    --theme-shadow: 2.75px 2.75px 0 #F8A41D;
+  }
+
+  [data-theme='club'],
+  .theme-club {
+    --color-primary: #8A38F5;
+    --theme-light: #F4EBFD;
+    --theme-light-hover: #ECE0FC;
+    --theme-light-active: #DEC7FA;
+    --theme-normal: #8A38F5;
+    --theme-normal-hover: #7828E0;
+    --theme-normal-active: #6618CB;
+    --theme-dark: #5B21B6;
+    --theme-dark-hover: #4C1D95;
+    --theme-dark-active: #3B0764;
+    --theme-darker: #2E1065;
+    --theme-shadow: 2.75px 2.75px 0 #8A38F5;
+  }
+
+  html {
+    font-size: 14px;
+  }
+
+  @media (min-width: 640px) {
+    html {
+      font-size: 14.5px;
+    }
+  }
+
+  html,
+  body {
+    font-family: 'IRANSansXFaNum', 'IRANSansX', sans-serif !important;
+    background-color: var(--surface-sunken);
+    color: var(--text-normal);
+    direction: rtl;
+    text-align: right;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    max-width: 100vw;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  main {
+    font-family: 'IRANSansXFaNum', 'IRANSansX', sans-serif !important;
+    color: var(--text-normal);
+    direction: rtl;
+    text-align: right;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  *,
+  *::before,
+  *::after,
+  button,
+  input,
+  select,
+  textarea,
+  optgroup {
+    font-family: 'IRANSansXFaNum', 'IRANSansX', sans-serif;
+    box-sizing: border-box;
+  }
+
+  code,
+  kbd,
+  samp,
+  pre,
+  .font-mono {
+    font-family: 'IRANSansXFaNum', 'IRANSansX', sans-serif !important;
+  }
+
+  /* ==========================================================================
+     GLOBAL MODERN SELECT & DROPDOWN STYLING
+     ========================================================================== */
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='2.2' stroke='%2364748B'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E");
+    background-position: left 0.85rem center;
+    background-repeat: no-repeat;
+    background-size: 1.15rem;
+    padding-left: 2.5rem !important;
+    padding-right: 0.875rem;
+    cursor: pointer;
+    font-family: 'IRANSansXFaNum', 'IRANSansX', sans-serif;
+    border-radius: 0.75rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+  }
+
+  select:not([class*="h-"]):not([class*="py-1"]):not([class*="text-xs"]) {
+    min-height: 44px;
+  }
+
+  select:focus {
+    outline: none;
+    border-color: #59BBAF !important;
+    box-shadow: 0 0 0 2px rgba(89, 187, 175, 0.25) !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='2.2' stroke='%2359BBAF'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E");
+  }
+
+  select:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  select option {
+    background-color: #FFFFFF;
+    color: #1E293B;
+    font-family: 'IRANSansXFaNum', 'IRANSansX', sans-serif;
+  }
+
+  select option:disabled {
+    color: #94A3B8;
+  }
+
+
+  /* ==========================================================================
+     ROKAD MODERN REFINED NEO-BRUTALISM — PERMANENT UI (buttons, cards)
+     This bold treatment belongs to elements the user looks at and decides
+     to act on. Toasts are handled separately below with a calmer language,
+     on purpose — see the Toast section for why.
+     ========================================================================== */
+
+  .rokad-card {
+    background: var(--surface-raised);
+    border: 1.5px solid #EAEAEA;
+    border-radius: 16px;
+    box-shadow: 2.75px 2.75px 0 #202A5A;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .rokad-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 3.5px 3.5px 0 #202A5A;
+  }
+
+  .rokad-btn-primary {
+    background-color: #59BBAF;
+    color: #FFFFFF;
+    font-weight: 700;
+    border: 1.5px solid #438C83;
+    border-radius: 12px;
+    box-shadow: 2.5px 2.5px 0 #1F413D;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .rokad-btn-primary:hover {
+    background-color: #50A89E;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 #1F413D;
+  }
+
+  .rokad-btn-primary:active {
+    transform: translate(1.5px, 1.5px);
+    box-shadow: 1px 1px 0 #1F413D;
+  }
+
+  .rokad-btn-sec {
+    background-color: #202A5A;
+    color: #FFFFFF;
+    font-weight: 700;
+    border: 1.5px solid #182044;
+    border-radius: 12px;
+    box-shadow: 2.5px 2.5px 0 #0B0F1F;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .rokad-btn-sec:hover {
+    background-color: #1D2651;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 #0B0F1F;
+  }
+
+  .rokad-btn-sec:active {
+    transform: translate(1.5px, 1.5px);
+    box-shadow: 1px 1px 0 #0B0F1F;
+  }
+
+  .rokad-btn-outline {
+    background-color: #FFFFFF;
+    color: #292827;
+    font-weight: 600;
+    border: 1.5px solid #DFDFDF;
+    border-radius: 12px;
+    box-shadow: 2px 2px 0 #BDBCBC;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .rokad-btn-outline:hover {
+    background-color: #F8F9FA;
+    border-color: #292827;
+    box-shadow: 2.5px 2.5px 0 #292827;
+  }
+
+  .rokad-btn-outline:active {
+    transform: translate(1.5px, 1.5px);
+    box-shadow: 1px 1px 0 #292827;
+  }
+
+  /* ==========================================================================
+     DARK MODE
+     ========================================================================== */
+  .dark {
+    color-scheme: dark;
+    --surface: #151C28;
+    --surface-sunken: #0B0F17;
+    --surface-raised: #151C28;
+    --border-subtle: #242F42;
+    --border-default: #2D3A50;
+
+    --text-light: #64748B;
+    --text-light-hover: #94A3B8;
+    --text-light-active: #CBD5E1;
+    --text-normal: #CBD5E1;
+    --text-normal-hover: #E2E8F0;
+    --text-normal-active: #F8FAFC;
+    --text-dark: #F1F5F9;
+    --text-darker: #FFFFFF;
+  }
+
+  .dark html,
+  .dark body {
+    background-color: var(--surface-sunken) !important;
+    color: #F1F5F9 !important;
+  }
+
+  /* Cards & containers on light backgrounds */
+  .dark [class*="bg-white"]:not([class*="dark:bg-"]),
+  .dark [class*="bg-zinc-900"]:not([class*="dark:bg-"]) {
+    background-color: #151C28 !important;
+  }
+
+  .dark [class*="bg-gray-50"]:not([class*="dark:bg-"]),
+  .dark [class*="bg-zinc-50"]:not([class*="dark:bg-"]) {
+    background-color: #111722 !important;
+  }
+
+  .dark [class*="bg-gray-100"]:not([class*="dark:bg-"]),
+  .dark [class*="bg-zinc-100"]:not([class*="dark:bg-"]) {
+    background-color: #1A2232 !important;
+  }
+
+  .dark [class*="bg-zinc-800"]:not([class*="dark:bg-"]) {
+    background-color: #1C2536 !important;
+  }
+
+  /* Borders & dividers */
+  .dark [class*="border-gray-100"]:not([class*="dark:border-"]),
+  .dark [class*="border-gray-150"]:not([class*="dark:border-"]),
+  .dark [class*="border-gray-200"]:not([class*="dark:border-"]),
+  .dark [class*="border-gray-250"]:not([class*="dark:border-"]),
+  .dark [class*="border-gray-300"]:not([class*="dark:border-"]),
+  .dark [class*="border-zinc-100"]:not([class*="dark:border-"]),
+  .dark [class*="border-zinc-200"]:not([class*="dark:border-"]),
+  .dark [class*="border-zinc-300"]:not([class*="dark:border-"]),
+  .dark [class*="border-zinc-700"]:not([class*="dark:border-"]),
+  .dark [class*="border-zinc-800"]:not([class*="dark:border-"]) {
+    border-color: #242F42 !important;
+  }
+
+  .dark [class*="divide-gray-100"]> :not([hidden])~ :not([hidden]),
+  .dark [class*="divide-gray-200"]> :not([hidden])~ :not([hidden]) {
+    border-color: #242F42 !important;
+  }
+
+  /* Selects */
+  .dark select {
+    background-color: #1C2536 !important;
+    border-color: #2D3748 !important;
+    color: #F8FAFC !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='2.2' stroke='%2394A3B8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E");
+  }
+
+  .dark select:focus {
+    border-color: #59BBAF !important;
+    box-shadow: 0 0 0 2px rgba(89, 187, 175, 0.3) !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='2.2' stroke='%2359BBAF'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E");
+  }
+
+  .dark select option {
+    background-color: #1C2536 !important;
+    color: #F8FAFC !important;
+  }
+
+  .dark select option:disabled {
+    color: #64748B !important;
+  }
+
+  /* Text contrast */
+  .dark h1:not([class*="dark:text-"]),
+  .dark h2:not([class*="dark:text-"]),
+  .dark h3:not([class*="dark:text-"]),
+  .dark h4:not([class*="dark:text-"]),
+  .dark h5:not([class*="dark:text-"]),
+  .dark h6:not([class*="dark:text-"]) {
+    color: #FFFFFF;
+  }
+
+  .dark .text-ink-darker,
+  .dark [class*="text-ink-darker"]:not([class*="dark:text-"]),
+  .dark .text-ink-dark,
+  .dark [class*="text-ink-dark"]:not([class*="dark:text-"]),
+  .dark [class*="text-black"]:not([class*="dark:text-"]),
+  .dark [class*="text-gray-900"]:not([class*="dark:text-"]),
+  .dark [class*="text-gray-800"]:not([class*="dark:text-"]) {
+    color: #FFFFFF !important;
+  }
+
+  .dark .text-ink-normal,
+  .dark [class*="text-ink-normal"]:not([class*="dark:text-"]),
+  .dark [class*="text-gray-700"]:not([class*="dark:text-"]) {
+    color: #F1F5F9 !important;
+  }
+
+  .dark [class*="text-gray-600"]:not([class*="dark:text-"]) {
+    color: #CBD5E1 !important;
+  }
+
+  .dark .text-ink-light,
+  .dark [class*="text-ink-light"]:not([class*="dark:text-"]),
+  .dark [class*="text-gray-500"]:not([class*="dark:text-"]) {
+    color: #94A3B8 !important;
+  }
+
+  .dark .text-sec,
+  .dark [class*="text-sec"]:not([class*="dark:text-"]),
+  .dark [class*="text-sec-dark"]:not([class*="dark:text-"]),
+  .dark [class*="text-sec-darker"]:not([class*="dark:text-"]),
+  .dark [class*="text-male-normal"]:not([class*="dark:text-"]),
+  .dark [class*="text-male-dark"]:not([class*="dark:text-"]),
+  .dark [class*="text-male-darker"]:not([class*="dark:text-"]) {
+    color: #F1F5F9 !important;
+  }
+
+  /* Status alerts & badges */
+  .dark [class*="bg-emerald-50"]:not([class*="dark:bg-"]) {
+    background-color: rgba(6, 78, 59, 0.45) !important;
+    border-color: rgba(16, 185, 129, 0.35) !important;
+    color: #6EE7B7 !important;
+  }
+
+  .dark [class*="bg-rose-50"]:not([class*="dark:bg-"]) {
+    background-color: rgba(136, 19, 55, 0.45) !important;
+    border-color: rgba(244, 63, 94, 0.35) !important;
+    color: #FDA4AF !important;
+  }
+
+  .dark [class*="bg-amber-50"]:not([class*="dark:bg-"]) {
+    background-color: rgba(120, 53, 15, 0.45) !important;
+    border-color: rgba(245, 158, 11, 0.35) !important;
+    color: #FCD34D !important;
+  }
+
+  .dark [class*="bg-blue-50"]:not([class*="dark:bg-"]) {
+    background-color: rgba(30, 58, 138, 0.45) !important;
+    border-color: rgba(59, 130, 246, 0.35) !important;
+    color: #93C5FD !important;
+  }
+
+  .dark [class*="bg-purple-50"]:not([class*="dark:bg-"]),
+  .dark [class*="bg-purple-100"]:not([class*="dark:bg-"]) {
+    background-color: rgba(88, 28, 135, 0.45) !important;
+    border-color: rgba(168, 85, 247, 0.35) !important;
+    color: #D8B4FE !important;
+  }
+
+  .dark [class*="text-emerald-800"]:not([class*="dark:text-"]),
+  .dark [class*="text-emerald-700"]:not([class*="dark:text-"]) {
+    color: #6EE7B7 !important;
+  }
+
+  .dark [class*="text-rose-800"]:not([class*="dark:text-"]),
+  .dark [class*="text-rose-700"]:not([class*="dark:text-"]) {
+    color: #FDA4AF !important;
+  }
+
+  .dark [class*="text-amber-800"]:not([class*="dark:text-"]),
+  .dark [class*="text-amber-700"]:not([class*="dark:text-"]) {
+    color: #FCD34D !important;
+  }
+
+  .dark [class*="text-blue-800"]:not([class*="dark:text-"]),
+  .dark [class*="text-blue-700"]:not([class*="dark:text-"]) {
+    color: #93C5FD !important;
+  }
+
+  .dark [class*="text-purple-800"]:not([class*="dark:text-"]),
+  .dark [class*="text-purple-700"]:not([class*="dark:text-"]),
+  .dark [class*="text-purple-900"]:not([class*="dark:text-"]) {
+    color: #D8B4FE !important;
+  }
+
+  .dark .rokad-card {
+    background: #151C28 !important;
+    border-color: #242F42 !important;
+    color: #F1F5F9 !important;
+    box-shadow: 2.75px 2.75px 0 #59BBAF;
+  }
+
+  .dark .rokad-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 3.5px 3.5px 0 #59BBAF;
+  }
+
+  .dark .rokad-btn-sec {
+    background-color: #2B3875;
+    border-color: #3F50A0;
+    box-shadow: 2.5px 2.5px 0 #59BBAF;
+  }
+
+  .dark .rokad-btn-outline {
+    background-color: #161D2A;
+    color: #F1F5F9;
+    border-color: #2D3A50;
+    box-shadow: 2px 2px 0 #0F172A;
+  }
+
+  .dark table {
+    background-color: #151C28;
+    color: #E2E8F0;
+  }
+
+  .dark thead,
+  .dark th {
+    background-color: #1C2536 !important;
+    color: #F1F5F9 !important;
+    border-color: #242F42 !important;
+  }
+
+  .dark tbody tr {
+    border-color: #242F42 !important;
+  }
+
+  .dark tbody tr:hover {
+    background-color: rgba(28, 37, 54, 0.6) !important;
+  }
+
+  .dark td {
+    border-color: #242F42 !important;
+    color: #CBD5E1;
+  }
+
+  .dark input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="color"]),
+  .dark select,
+  .dark textarea {
+    background-color: #1C2536 !important;
+    color: #FFFFFF !important;
+    border-color: #2D3A50 !important;
+  }
+
+  .dark input:focus,
+  .dark select:focus,
+  .dark textarea:focus {
+    border-color: #59BBAF !important;
+    background-color: #1F2A3D !important;
+  }
+
+  .dark input::placeholder,
+  .dark textarea::placeholder {
+    color: #64748B !important;
+  }
+
+  /* ==========================================================================
+     PRINT — official documents / payslips / receipts
+     ========================================================================== */
+  @media print {
+    @page {
+      size: A4 portrait;
+      margin: 10mm 12mm 12mm 12mm;
+    }
+
+    :root,
+    html,
+    body,
+    .dark,
+    .dark body {
+      color-scheme: light !important;
+      background: #ffffff !important;
+      color: #0F172A !important;
+      font-size: 10.5pt !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    aside,
+    header,
+    nav,
+    .screen-only,
+    .no-print {
+      display: none !important;
+    }
+
+    .print-only {
+      display: block !important;
+    }
+
+    .executive-table {
+      width: 100% !important;
+      border-collapse: collapse !important;
+      font-size: 9pt !important;
+    }
+
+    .executive-table tr {
+      page-break-inside: avoid !important;
+    }
+
+    .executive-table th {
+      background-color: #F1F5F9 !important;
+      color: #1E293B !important;
+      font-weight: 800 !important;
+      border: 1px solid #E2E8F0 !important;
+      border-bottom: 2px solid #CBD5E1 !important;
+      padding: 8px 10px !important;
+      text-align: right !important;
+    }
+
+    .executive-table td {
+      border: 1px solid #E2E8F0 !important;
+      padding: 7px 10px !important;
+    }
+
+    * {
+      box-shadow: none !important;
+      text-shadow: none !important;
+      transition: none !important;
+      animation: none !important;
+    }
+  }
+
+  /* ==========================================================================
+     SCROLLBARS - HIDE VISIBLE SCROLLBARS GLOBALLY WHILE PRESERVING FULL SCROLL
+     ========================================================================== */
+  *,
+  *::before,
+  *::after {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
+
+  *::-webkit-scrollbar,
+  ::-webkit-scrollbar,
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  main::-webkit-scrollbar,
+  div::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+  }
+
+  .no-scrollbar::-webkit-scrollbar,
+  .scrollbar-none::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+  }
+
+  .no-scrollbar,
+  .scrollbar-none {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  .touch-target-min {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  @media (max-width: 640px) {
+    .mobile-touch-target {
+      min-height: 44px;
+    }
+  }
+
+  html.modal-scroll-locked,
+  body.modal-scroll-locked {
+    overscroll-behavior: contain !important;
+  }
+
+  @keyframes sheetSlideUp {
+    0% {
+      transform: translateY(100%);
+      opacity: 0.6;
+    }
+
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .animate-sheet-slide-up {
+    animation: sheetSlideUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
+/* ==========================================================================
+   TOAST SYSTEM (SONNER) — REDESIGNED
+   ==========================================================================
+   Why this looks different from buttons/cards:
+   Buttons and cards are permanent — the user decides to interact with them,
+   so a bold, high-contrast neo-brutalist treatment (thick border + hard
+   offset shadow) suits them. A toast is the opposite kind of object: it
+   appears without being asked for, sits for a few seconds, and should
+   leave the person calm, not confronted. So instead of a colored
+   background + thick border + hard shadow (which reads as an alert box),
+   this version uses:
+     - a neutral, quiet surface (not tinted per status)
+     - one 4px colored accent bar (physical left edge — becomes the right
+       edge automatically under RTL, no override needed) that carries the
+       status color
+     - a soft, diffused elevation shadow instead of a hard offset one
+     - the icon carries the status color; the text stays neutral ink
+   This keeps instant status recognition (color + icon + accent bar) while
+   removing the visual noise of a fully colored, hard-shadowed alert box
+   stacking on top of a busy mobile screen.
+   ========================================================================== */
+
+[data-sonner-toaster] {
+  font-family: 'IRANSansXFaNum', 'IRANSansX', sans-serif !important;
+  direction: rtl !important;
+}
+
+[data-sonner-toast] {
+  font-family: 'IRANSansXFaNum', 'IRANSansX', sans-serif !important;
+  direction: rtl !important;
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  /* left padding reserved for the close button; the accent bar sits on
+     the physical left edge, which is the *trailing* edge in RTL — the
+     correct place for a secondary marker, not the leading edge where the
+     eye lands first */
+  padding: 13px 16px 13px 44px !important;
+  border-radius: var(--toast-radius) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-left: none !important;
+  box-shadow: var(--toast-shadow) !important;
+  background-color: var(--surface) !important;
+  color: var(--text-normal) !important;
+  min-height: 56px !important;
+  width: 100% !important;
+  max-width: 420px !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease !important;
+}
+
+/* status accent bar */
+[data-sonner-toast]::before {
+  content: '' !important;
+  position: absolute !important;
+  inset-inline-start: 0 !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  width: 4px !important;
+  background-color: #94A3B8 !important;
+  /* neutral default */
+}
+
+[data-sonner-toast] [data-close-button="true"],
+[data-sonner-toast] [data-close-button] {
+  position: absolute !important;
+  left: 10px !important;
+  right: auto !important;
+  top: 50% !important;
+  bottom: auto !important;
+  transform: translateY(-50%) !important;
+  width: 24px !important;
+  height: 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 8px !important;
+  border: none !important;
+  background-color: transparent !important;
+  color: var(--text-light) !important;
+  cursor: pointer !important;
+  opacity: 0.7 !important;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  z-index: 20 !important;
+  flex-shrink: 0 !important;
+  line-height: 1 !important;
+}
+
+[data-sonner-toast] [data-close-button]:hover {
+  opacity: 1 !important;
+  background-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+[data-sonner-toast] [data-close-button]:active {
+  transform: translateY(-50%) scale(0.92) !important;
+}
+
+[data-sonner-toast] [data-close-button] svg {
+  width: 13px !important;
+  height: 13px !important;
+  min-width: 13px !important;
+  min-height: 13px !important;
+  display: block !important;
+  margin: auto !important;
+  stroke-width: 2.25 !important;
+}
+
+[data-sonner-toast] [data-icon] {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  margin: 0 !important;
+  color: #64748B !important;
+  /* neutral default, overridden per status below */
+}
+
+[data-sonner-toast] [data-icon] svg {
+  width: 21px !important;
+  height: 21px !important;
+  min-width: 21px !important;
+  min-height: 21px !important;
+  display: block !important;
+}
+
+[data-sonner-toast] [data-content] {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  text-align: right !important;
+}
+
+[data-sonner-toast] [data-title] {
+  font-family: inherit !important;
+  font-size: 0.875rem !important;
+  font-weight: 700 !important;
+  line-height: 1.45 !important;
+  margin: 0 !important;
+  word-break: break-word !important;
+  color: var(--text-normal) !important;
+}
+
+[data-sonner-toast] [data-description] {
+  font-family: inherit !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+  margin: 0 !important;
+  word-break: break-word !important;
+  color: var(--text-light-active) !important;
+}
+
+/* action / cancel buttons — quiet by default, not competing with the
+   accent bar + icon for attention */
+[data-sonner-toast] [data-button] {
+  font-family: inherit !important;
+  font-size: 0.8125rem !important;
+  font-weight: 700 !important;
+  padding: 6px 14px !important;
+  border-radius: 8px !important;
+  border: none !important;
+  background-color: var(--text-normal) !important;
+  color: #FFFFFF !important;
+  cursor: pointer !important;
+  transition: transform 0.15s ease, opacity 0.15s ease !important;
+}
+
+[data-sonner-toast] [data-button]:hover {
+  opacity: 0.88 !important;
+}
+
+[data-sonner-toast] [data-button]:active {
+  transform: scale(0.97) !important;
+}
+
+[data-sonner-toast] [data-cancel] {
+  font-family: inherit !important;
+  font-size: 0.8125rem !important;
+  font-weight: 600 !important;
+  padding: 6px 12px !important;
+  border-radius: 8px !important;
+  border: none !important;
+  background-color: transparent !important;
+  color: var(--text-light) !important;
+  cursor: pointer !important;
+}
+
+/* --------------------------------------------------------------------------
+   Status variants — color lives in the accent bar + icon only. The card
+   surface itself stays neutral, which is what keeps this calm.
+   -------------------------------------------------------------------------- */
+
+[data-sonner-toast][data-type='success']::before {
+  background-color: #16A34A !important;
+}
+
+[data-sonner-toast][data-type='success'] [data-icon] {
+  color: #16A34A !important;
+}
+
+[data-sonner-toast][data-type='error']::before {
+  background-color: #DC2626 !important;
+}
+
+[data-sonner-toast][data-type='error'] [data-icon] {
+  color: #DC2626 !important;
+}
+
+[data-sonner-toast][data-type='warning']::before {
+  background-color: #D97706 !important;
+}
+
+[data-sonner-toast][data-type='warning'] [data-icon] {
+  color: #D97706 !important;
+}
+
+[data-sonner-toast][data-type='info']::before {
+  background-color: #2563EB !important;
+}
+
+[data-sonner-toast][data-type='info'] [data-icon] {
+  color: #2563EB !important;
+}
+
+[data-sonner-toast][data-type='loading']::before {
+  background-color: #64748B !important;
+}
+
+[data-sonner-toast][data-type='loading'] [data-icon] {
+  color: #64748B !important;
+}
+
+/* Undoable (Telegram-style) toast — the countdown progress rail replaces
+   the static accent bar for this one case, so the two never fight for
+   the same 4px strip. See UndoToast.tsx for the timer logic. */
+[data-sonner-toast][data-undoable='true']::before {
+  display: none !important;
+}
+
+.rokad-undo-toast__rail {
+  position: absolute;
+  inset-inline-start: 0;
+  bottom: 0;
+  height: 3px;
+  background-color: var(--color-primary);
+  border-radius: 0 0 0 var(--toast-radius);
+}
+
+[data-sonner-toaster] {
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%) !important;
+}
+
+@media (max-width: 640px) {
+  [data-sonner-toaster] {
+    width: calc(100% - 32px) !important;
+    max-width: 420px !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Dark mode
+   -------------------------------------------------------------------------- */
+
+.dark [data-sonner-toast],
+[data-theme='dark'] [data-sonner-toast] {
+  background-color: var(--surface) !important;
+  color: #F1F5F9 !important;
+  border-color: var(--border-subtle) !important;
+  box-shadow: 0 10px 30px -8px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.35) !important;
+}
+
+.dark [data-sonner-toast] [data-title] {
+  color: #F8FAFC !important;
+}
+
+.dark [data-sonner-toast] [data-description] {
+  color: #94A3B8 !important;
+}
+
+.dark [data-sonner-toast] [data-close-button],
+[data-theme='dark'] [data-sonner-toast] [data-close-button] {
+  color: #94A3B8 !important;
+}
+
+.dark [data-sonner-toast] [data-close-button]:hover,
+[data-theme='dark'] [data-sonner-toast] [data-close-button]:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dark [data-sonner-toast] [data-button] {
+  background-color: #E2E8F0 !important;
+  color: #0F172A !important;
+}
+
+/* status icon colors stay legible on dark surfaces — slightly lighter
+   than the light-mode values so they don't look muddy on a near-black
+   background */
+.dark [data-sonner-toast][data-type='success'] [data-icon] {
+  color: #4ADE80 !important;
+}
+
+.dark [data-sonner-toast][data-type='error'] [data-icon] {
+  color: #F87171 !important;
+}
+
+.dark [data-sonner-toast][data-type='warning'] [data-icon] {
+  color: #FBBF24 !important;
+}
+
+.dark [data-sonner-toast][data-type='info'] [data-icon] {
+  color: #60A5FA !important;
+}
+
+.dark [data-sonner-toast][data-type='loading'] [data-icon] {
+  color: #94A3B8 !important;
+}
+
+.dark [data-sonner-toast][data-type='success']::before { background-color: #22C55E !important; }
+.dark [data-sonner-toast][data-type='error']::before    { background-color: #EF4444 !important; }
+.dark [data-sonner-toast][data-type='warning']::before  { background-color: #F59E0B !important; }
+.dark [data-sonner-toast][data-type='info']::before     { background-color: #3B82F6 !important; }
+
+/* Custom Sidebar Independent Scrollbar */
+.custom-sidebar-scroll {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+.custom-sidebar-scroll::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}

@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build & Dist
+dist/
+build/
+frontend/dist/
+frontend/dev-dist/
+dev-dist/
+
+# TypeScript Cache
+*.tsbuildinfo
+
+# Environment variables
+.env
+.env.local
+.env.production
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Coverage & Tests
+coverage/
+.nyc_output/
+
+# Temporary / Scratch scripts
+scratch/
+.tempmediaStorage/
+*.sql
+*.xlsx
+.polls_dev_store.json
+.calendar_events_dev_store.json
+.*_dev_store.json
+
+# Local scripts & templates (kept locally for reference)
+scripts/*
+!scripts/sync-version.js
+!scripts/check-published-secrets.mjs
