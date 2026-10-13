@@ -432,7 +432,7 @@ export class MembersService {
                 nationalId: creds.nationalId || undefined,
                 avatarUrl: avatarUrl || undefined,
                 passwordHash,
-                      encryptedPassword: encryptedPassword || undefined,
+                encryptedPassword: encryptedPassword || undefined,
                 role: Role.STUDENT as any,
                 status: 'ACTIVE',
               },
