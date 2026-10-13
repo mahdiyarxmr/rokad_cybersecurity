@@ -587,18 +587,6 @@ export class AuthService {
     if (dto.newPassword === dto.oldPassword) {
       throw new BadRequestException('رمز جدید باید با رمز فعلی متفاوت باشد');
     }
-    if (
-      isPredictablePassword(dto.newPassword, [
-        user.username,
-        user.phone,
-        user.nationalId,
-        user.email,
-      ])
-    ) {
-      throw new BadRequestException(
-        'رمز جدید نباید از شناسه کاربری ساخته شود یا از رمزهای نمونهٔ منتشرشده باشد',
-      );
-    }
 
     const passwordHash = await argon2.hash(dto.newPassword);
     const encryptedPassword = await this.passwordVaultService.encryptPasswordForTenant(

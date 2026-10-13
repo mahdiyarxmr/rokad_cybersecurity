@@ -432,8 +432,7 @@ export class MembersService {
                 nationalId: creds.nationalId || undefined,
                 avatarUrl: avatarUrl || undefined,
                 passwordHash,
-                mustChangePassword: true,
-                encryptedPassword: encryptedPassword || undefined,
+                      encryptedPassword: encryptedPassword || undefined,
                 role: Role.STUDENT as any,
                 status: 'ACTIVE',
               },
@@ -650,7 +649,6 @@ export class MembersService {
           nationalId: creds.nationalId,
           avatarUrl: dto.avatarUrl || undefined,
           passwordHash,
-          mustChangePassword: true,
           encryptedPassword: encryptedPassword || undefined,
           role: Role.STUDENT as any,
           status: 'ACTIVE',
@@ -999,7 +997,6 @@ export class MembersService {
           nationalId: creds.nationalId,
           email: dto.email,
           passwordHash,
-          mustChangePassword: true,
           encryptedPassword: encryptedPassword || undefined,
           role: Role.TEACHER as any,
           status: 'ACTIVE',
@@ -1176,7 +1173,6 @@ export class MembersService {
       if (dto.status !== undefined) userUpdate.status = dto.status;
       if (passwordHash) {
         userUpdate.passwordHash = passwordHash;
-        userUpdate.mustChangePassword = true;
         if (encryptedPassword) {
           userUpdate.encryptedPassword = encryptedPassword;
         }
@@ -1360,7 +1356,6 @@ export class MembersService {
           username: creds.username !== dto.phone ? creds.username : undefined,
           nationalId: creds.nationalId,
           passwordHash,
-          mustChangePassword: true,
           encryptedPassword: encryptedPassword || undefined,
           role: Role.STAFF as any,
           status: 'ACTIVE',
@@ -1421,7 +1416,6 @@ export class MembersService {
           username: creds.username !== dto.phone ? creds.username : undefined,
           nationalId: creds.nationalId,
           passwordHash,
-          mustChangePassword: true,
           encryptedPassword: encryptedPassword || undefined,
           role: Role.STAFF as any,
           status: 'ACTIVE',
@@ -1489,7 +1483,6 @@ export class MembersService {
           username: creds.username !== dto.phone ? creds.username : undefined,
           nationalId: creds.nationalId,
           passwordHash,
-          mustChangePassword: true,
           encryptedPassword: encryptedPassword || undefined,
           role: Role.PARENT as any,
           status: 'ACTIVE',
@@ -1667,7 +1660,6 @@ export class MembersService {
         data: {
           username: parentCreds.username,
           passwordHash: parentPasswordHash,
-          mustChangePassword: true,
           encryptedPassword: parentEncryptedPassword || undefined,
           ...(updatePhone ? { phone: updatePhone } : {}),
           ...(rawFullName ? { firstName: pFirstName, lastName: pLastName } : {}),
@@ -1717,7 +1709,6 @@ export class MembersService {
         where: { id: parentUser.id },
         data: {
           passwordHash: parentPasswordHash,
-          mustChangePassword: true,
           encryptedPassword: parentEncryptedPassword || undefined,
         },
       });
@@ -1740,7 +1731,6 @@ export class MembersService {
           phone: createPhone,
           username: parentCreds.username,
           passwordHash: parentPasswordHash,
-          mustChangePassword: true,
           encryptedPassword: parentEncryptedPassword || undefined,
           role: Role.PARENT as any,
           status: 'ACTIVE',

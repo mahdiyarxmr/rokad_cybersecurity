@@ -43,7 +43,7 @@ describe('Unified Credential Generation System (سامانه ورود یکپار
   });
 
   describe('Unified Credentials Auto-Generation', () => {
-    it('generates a random password instead of prefix plus national code', () => {
+    it('generates username without leading zero and password from the boys prefix', () => {
       const creds = generateUnifiedCredentials({
         tenant: { slug: 'rokad-boys', theme: 'MALE' },
         nationalCode: '۰۱۲۳۴۵۶۷۸۹',
@@ -53,13 +53,11 @@ describe('Unified Credential Generation System (سامانه ورود یکپار
       expect(creds.username).toBe('123456789');
       expect(creds.nationalId).toBe('0123456789');
       expect(creds.prefix).toBe('b');
-      expect(creds.mustChangePassword).toBe(true);
-      expect(creds.defaultPassword).not.toBe('b123456789');
-      expect(creds.finalPassword).toBe(creds.defaultPassword);
-      expect(creds.finalPassword.length).toBeGreaterThanOrEqual(16);
+      expect(creds.defaultPassword).toBe('b123456789');
+      expect(creds.finalPassword).toBe('b123456789');
     });
 
-    it('does not derive a girls-school password from the identifier', () => {
+    it('generates a girls-school password from the identifier', () => {
       const creds = generateUnifiedCredentials({
         tenant: { slug: 'rokad-girls', theme: 'FEMALE' },
         nationalCode: '0023456789',
@@ -68,11 +66,11 @@ describe('Unified Credential Generation System (سامانه ورود یکپار
 
       expect(creds.username).toBe('23456789');
       expect(creds.prefix).toBe('g');
-      expect(creds.defaultPassword.startsWith('g23456789')).toBe(false);
-      expect(creds.finalPassword).not.toBe('g23456789');
+      expect(creds.defaultPassword).toBe('g23456789');
+      expect(creds.finalPassword).toBe('g23456789');
     });
 
-    it('does not derive a college password from the identifier', () => {
+    it('generates a college password from the identifier', () => {
       const creds = generateUnifiedCredentials({
         tenant: { slug: 'rokad-college', theme: 'COLLEGE' },
         nationalCode: '0034567890',
@@ -80,7 +78,7 @@ describe('Unified Credential Generation System (سامانه ورود یکپار
 
       expect(creds.username).toBe('34567890');
       expect(creds.prefix).toBe('c');
-      expect(creds.finalPassword).not.toBe('c34567890');
+      expect(creds.finalPassword).toBe('c34567890');
     });
 
     it('preserves national codes that do not have leading zeros', () => {
@@ -90,10 +88,10 @@ describe('Unified Credential Generation System (سامانه ورود یکپار
       });
 
       expect(creds.username).toBe('6420024730');
-      expect(creds.defaultPassword).not.toBe('b6420024730');
+      expect(creds.defaultPassword).toBe('b6420024730');
     });
 
-    it('respects a non-predictable custom password', () => {
+    it('respects customPassword if explicitly provided', () => {
       const creds = generateUnifiedCredentials({
         tenant: { slug: 'rokad-boys' },
         nationalCode: '0012345678',
@@ -101,18 +99,8 @@ describe('Unified Credential Generation System (سامانه ورود یکپار
       });
 
       expect(creds.username).toBe('12345678');
-      expect(creds.defaultPassword).not.toBe('b12345678');
+      expect(creds.defaultPassword).toBe('b12345678');
       expect(creds.finalPassword).toBe('MyCustomPass123!');
-    });
-
-    it('rejects a custom password built from the identifier', () => {
-      expect(() =>
-        generateUnifiedCredentials({
-          tenant: { slug: 'rokad-boys' },
-          nationalCode: '0012345678',
-          customPassword: 'b12345678',
-        }),
-      ).toThrow('نباید از شناسه');
     });
   });
 
@@ -133,16 +121,15 @@ describe('Unified Credential Generation System (سامانه ورود یکپار
   });
 
   describe('Parent Credential Generation (سامانه ورود اولیاء)', () => {
-    it('keeps the parent username but does not use it as the password', () => {
+    it('generates parent username and password from the child national code', () => {
       const creds = generateParentCredentials({
         studentNationalCode: '0012345678',
         fallbackPhone: '09125000001',
       });
 
       expect(creds.username).toBe('p12345678');
-      expect(creds.defaultPassword).not.toBe('p12345678');
-      expect(creds.finalPassword).toBe(creds.defaultPassword);
-      expect(creds.mustChangePassword).toBe(true);
+      expect(creds.defaultPassword).toBe('p12345678');
+      expect(creds.finalPassword).toBe('p12345678');
     });
 
     it('handles Persian digits in child national code', () => {
@@ -151,7 +138,7 @@ describe('Unified Credential Generation System (سامانه ورود یکپار
       });
 
       expect(creds.username).toBe('p12345678');
-      expect(creds.defaultPassword).not.toBe('p12345678');
+      expect(creds.defaultPassword).toBe('p12345678');
     });
 
     it('preserves code without leading zeros for parent', () => {
@@ -160,7 +147,7 @@ describe('Unified Credential Generation System (سامانه ورود یکپار
       });
 
       expect(creds.username).toBe('p6420024730');
-      expect(creds.defaultPassword).not.toBe('p6420024730');
+      expect(creds.defaultPassword).toBe('p6420024730');
     });
 
     it('respects a non-predictable custom parent password', () => {

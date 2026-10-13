@@ -387,7 +387,7 @@ model User {
   nationalIdBlindIndex String?
   username             String?
   passwordHash         String
-  mustChangePassword   Boolean    @default(true)
+  mustChangePassword   Boolean    @default(false)
   encryptedPassword    String?    @db.Text
   firstName            String
   lastName             String

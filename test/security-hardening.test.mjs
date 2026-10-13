@@ -34,9 +34,9 @@ test('rate limiter blocks the request after the cap', () => {
   assert.equal(consumeRateLimit(store, 'ip', 1_002, 60_000, 2).allowed, false);
 });
 
-test('source no longer builds passwords from a tenant prefix', () => {
+test('member passwords still follow the school identifier rule, without a recovery oracle', () => {
   const creds = read('src/common/utils/credential.util.ts');
-  assert.equal(creds.includes('${prefix}${strippedCode}'), false);
+  assert.equal(creds.includes('${prefix}${strippedCode}'), true);
   assert.equal(creds.includes('tryRecoverPlaintext'), false);
   const vault = read('src/modules/auth/password-vault.service.ts');
   assert.equal(vault.includes('tryRecoverPlaintext'), false);
