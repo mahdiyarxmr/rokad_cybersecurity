@@ -1,12 +1,13 @@
 import { PrismaClient } from '@prisma/client';
 import * as argon2 from 'argon2';
+import { localSeedPassword } from './local-seed-password';
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('🚀 Starting Precision Seeding for Rokad Boy & Girl Technical High Schools...');
 
-  const passwordHash = await argon2.hash('Rokad1404!');
+  const passwordHash = await argon2.hash(localSeedPassword('rokad-demo'));
 
   // 1. Core Feature Flags
   const flags = [
@@ -399,7 +400,7 @@ async function main() {
     });
   }
 
-  // 8. Users & Accounts for Login (Standardized Password: "Rokad1404!")
+  // 8. Users & Accounts for Login (Standardized Password: printed once by local seed)
   console.log('👥 Creating standard users for Boy and Girl campuses...');
 
   // Boys Admin

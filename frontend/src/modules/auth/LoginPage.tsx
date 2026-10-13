@@ -147,6 +147,9 @@ export const LoginPage: React.FC = () => {
   // 2FA state
   const [is2FAModalOpen, setIs2FAModalOpen] = useState(false);
   const [tempToken, setTempToken] = useState('');
+  const [forcedChange, setForcedChange] = useState<{ token: string; oldPassword: string } | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const focusField = (name: 'identifier' | 'password') => {
     (formRef.current?.elements.namedItem(name) as HTMLInputElement | null)?.focus();
@@ -177,8 +180,59 @@ export const LoginPage: React.FC = () => {
     navigate(getDashboardPath(user?.role), { replace: true });
   };
 
+  const beginForcedPasswordChange = (loginData: any, oldPassword: string) => {
+    const tenant = loginData?.tenant;
+    if (tenant?.id || tenant?.slug) {
+      setCurrentTenant({
+        id: tenant.id || currentTenant?.id || FALLBACK_TENANT_ID,
+        name: tenant.name || 'مدرسه رُکاد',
+        slug: tenant.slug || currentTenant?.slug || FALLBACK_TENANT_SLUG,
+        type: 'SCHOOL',
+        theme: (tenant.theme || 'ecosystem').toLowerCase() as any,
+      });
+    }
+    setForcedChange({ token: loginData.accessToken, oldPassword });
+    setNewPassword('');
+    setConfirmPassword('');
+    setError(null);
+  };
+
+  const handleForcedPasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forcedChange || isLoading) return;
+    if (newPassword.length < 8) {
+      setError('رمز جدید باید حداقل ۸ کاراکتر باشد.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError('تکرار رمز جدید یکسان نیست.');
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res: any = await apiClient.post(
+        '/auth/change-password',
+        { oldPassword: forcedChange.oldPassword, newPassword },
+        { headers: { Authorization: `Bearer ${forcedChange.token}` } },
+      );
+      const payload = res?.data || res;
+      setForcedChange(null);
+      applyLoginSuccess(payload?.accessToken ? payload : res);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || err?.message || 'تغییر رمز انجام نشد.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handle2FASuccess = (res: any) => {
     const loginData = res?.data || res;
+    if (loginData?.mustChangePassword && loginData?.accessToken) {
+      setIs2FAModalOpen(false);
+      beginForcedPasswordChange(loginData, password);
+      return;
+    }
     if (!loginData?.user) {
       setIs2FAModalOpen(false);
       setError(loginData?.message || 'ورود دو مرحله‌ای کامل نشد. لطفاً دوباره وارد شوید.');
@@ -243,6 +297,11 @@ export const LoginPage: React.FC = () => {
         return;
       }
 
+      if (responsePayload?.mustChangePassword && responsePayload?.accessToken) {
+        beginForcedPasswordChange(responsePayload, cleanPass);
+        return;
+      }
+
       applyLoginSuccess(res);
     } catch (err: any) {
       const status = err?.response?.status ?? err?.statusCode;
@@ -299,10 +358,12 @@ export const LoginPage: React.FC = () => {
           <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center py-8">
             <div className="mb-6 text-center">
               <h1 className="text-xl font-bold text-ink-normal dark:text-white sm:text-2xl">
-                ورود به حساب کاربری
+                {forcedChange ? 'تغییر رمز عبور' : 'ورود به حساب کاربری'}
               </h1>
               <p className="mt-1.5 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
-                نام کاربری و رمز عبور خود را وارد کنید.
+                {forcedChange
+                  ? 'رمز فعلی دیگر برای استفاده از سامانه کافی نیست. یک رمز جدید انتخاب کنید.'
+                  : 'نام کاربری و رمز عبور خود را وارد کنید.'}
               </p>
             </div>
 
@@ -317,7 +378,38 @@ export const LoginPage: React.FC = () => {
               </div>
             )}
 
-            <form ref={formRef} onSubmit={handleSubmit} noValidate className="space-y-4">
+            {forcedChange ? (
+              <form onSubmit={handleForcedPasswordChange} noValidate className="space-y-4">
+                <Input
+                  id="new-password"
+                  name="newPassword"
+                  label="رمز عبور جدید"
+                  type={showPassword ? 'text' : 'password'}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  icon={Lock}
+                  autoComplete="new-password"
+                  dir="ltr"
+                  className="text-left font-mono"
+                />
+                <Input
+                  id="confirm-password"
+                  name="confirmPassword"
+                  label="تکرار رمز جدید"
+                  type={showPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  icon={Lock}
+                  autoComplete="new-password"
+                  dir="ltr"
+                  className="text-left font-mono"
+                />
+                <Button type="submit" variant="primary" className="mt-2 h-11 w-full font-bold" isLoading={isLoading}>
+                  {isLoading ? 'در حال ذخیره…' : 'ثبت رمز جدید'}
+                </Button>
+              </form>
+            ) : null}
+            <form ref={formRef} onSubmit={handleSubmit} noValidate className={`space-y-4 ${forcedChange ? 'hidden' : ''}`}>
               {/* Username Input */}
               <Input
                 id="login-identifier"

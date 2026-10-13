@@ -20,6 +20,11 @@ export const PUBLISHED_INSECURE_VALUES = [
   'your_64_char_hex_blind_index_key_here',
   'your_64_char_hex_audit_hash_pepper_here',
   'RokadAdminPass2026!',
+  'RokadPass2026!',
+  'RokadParent2026!',
+  'RokadBoysPass2026!',
+  'RokadGirlsPass2026!',
+  'Rokad1404!',
 ] as const;
 
 const PUBLISHED_SET = new Set<string>(PUBLISHED_INSECURE_VALUES);

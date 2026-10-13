@@ -5,6 +5,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  MaxLength,
 } from 'class-validator';
 import { ChannelType, MessageAttachmentType } from '@prisma/client';
 
@@ -41,6 +42,7 @@ export class SendMessageDto {
   @ApiProperty({ description: 'متن پیام', example: 'سلام، زمان آزمون میان‌ترم مشخص شد؟' })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(4000)
   content: string;
 
   @ApiPropertyOptional({ description: 'کلید فایل پیوست در MinIO' })

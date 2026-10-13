@@ -85,7 +85,7 @@ export class ProvisionTenantDto {
   @IsNotEmpty()
   adminPhone: string;
 
-  @ApiProperty({ description: 'کلمه عبور اولیه مدیر مدرسه', example: 'RokadGirlsPass2026!' })
+  @ApiProperty({ description: 'کلمه عبور اولیه مدیر مدرسه', example: 'Use-a-unique-password' })
   @IsString()
   @MinLength(8)
   adminPassword: string;

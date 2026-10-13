@@ -396,6 +396,10 @@ export class AuthService {
       data: { lastLoginAt: new Date() },
     });
 
+    if (user.mustChangePassword) {
+      return this.buildPasswordChangeResponse(user);
+    }
+
     // Issue Token Pair with new Token Family
     const tokens = await this.createTokenPair(
       user.id,
@@ -503,6 +507,10 @@ export class AuthService {
       },
     });
 
+    if (user.mustChangePassword) {
+      return this.buildPasswordChangeResponse(user);
+    }
+
     const tokens = await this.createTokenPair(
       user.id,
       user.tenantId,
@@ -562,9 +570,12 @@ export class AuthService {
     userId: string,
     dto: ChangePasswordDto,
     currentRefreshToken?: string,
+    ipAddress?: string,
+    userAgent?: string,
   ) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
+      include: { tenant: true },
     });
 
     if (!user) throw new NotFoundException('کاربر یافت نشد');
@@ -572,6 +583,21 @@ export class AuthService {
     const isOldValid = await argon2.verify(user.passwordHash, dto.oldPassword);
     if (!isOldValid) {
       throw new BadRequestException('رمز عبور فعلی وارد شده نادرست است');
+    }
+    if (dto.newPassword === dto.oldPassword) {
+      throw new BadRequestException('رمز جدید باید با رمز فعلی متفاوت باشد');
+    }
+    if (
+      isPredictablePassword(dto.newPassword, [
+        user.username,
+        user.phone,
+        user.nationalId,
+        user.email,
+      ])
+    ) {
+      throw new BadRequestException(
+        'رمز جدید نباید از شناسه کاربری ساخته شود یا از رمزهای نمونهٔ منتشرشده باشد',
+      );
     }
 
     const passwordHash = await argon2.hash(dto.newPassword);
@@ -585,11 +611,29 @@ export class AuthService {
       data: {
         passwordHash,
         encryptedPassword: encryptedPassword || undefined,
+        mustChangePassword: false,
       },
     });
 
     // Requirement 4: Revoke all other active sessions!
     await this.sessionService.revokeAllOtherSessions(userId, currentRefreshToken);
+
+    const tokens = await this.createTokenPair(
+      user.id,
+      user.tenantId,
+      user.role,
+      user.isPlatformAdmin,
+      ipAddress,
+      userAgent,
+      user,
+    );
+    await this.sessionService.createSession(
+      user.id,
+      user.tenantId,
+      tokens.refreshToken,
+      ipAddress,
+      userAgent,
+    );
 
     this.eventEmitter.emit('audit.log', {
       tenantId: user.tenantId,
@@ -597,11 +641,31 @@ export class AuthService {
       action: 'CHANGE_PASSWORD',
       entity: 'User',
       entityId: user.id,
+      ipAddress,
+      userAgent,
     });
 
     return {
       success: true,
+      mustChangePassword: false,
       message: 'رمز عبور با موفقیت به‌روزرسانی شد و تمامی نشست‌های فعال در سایر دستگاه‌ها باطل گردیدند',
+      user: {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        isPlatformAdmin: user.isPlatformAdmin,
+        tenantId: user.tenantId,
+      },
+      tenant: user.tenant
+        ? {
+            id: user.tenant.id,
+            name: user.tenant.name,
+            slug: user.tenant.slug,
+            theme: user.tenant.theme,
+          }
+        : undefined,
+      ...tokens,
     };
   }
 
@@ -689,6 +753,14 @@ export class AuthService {
     // 3. Check expiration
     if (new Date() > tokenRecord.expiresAt) {
       throw new UnauthorizedException('توکن رفرش منقضی شده است');
+    }
+
+    if (family.user.mustChangePassword) {
+      await this.prisma.refreshTokenFamily.update({
+        where: { id: family.id },
+        data: { isRevoked: true, revokedReason: 'PASSWORD_RESET_REQUIRED' },
+      });
+      throw new UnauthorizedException('تغییر رمز عبور الزامی است. لطفاً دوباره وارد شوید.');
     }
 
     // 4-5. Atomic rotation: mark used + insert successor together (never half-rotate).
@@ -809,6 +881,41 @@ export class AuthService {
       refreshToken: rawRefreshToken,
       tokenType: 'Bearer',
       expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '15m'),
+    };
+  }
+
+  private buildPasswordChangeResponse(user: any) {
+    const accessToken = this.jwtService.sign(
+      {
+        sub: user.id,
+        tenantId: user.tenantId,
+        role: user.role,
+        isPlatformAdmin: !!user.isPlatformAdmin,
+        tokenUse: 'password_change',
+      },
+      { secret: this.accessSecret(), expiresIn: '15m' },
+    );
+    return {
+      mustChangePassword: true,
+      message: 'برای ادامه باید رمز عبور را تغییر دهید.',
+      accessToken,
+      tokenType: 'Bearer',
+      expiresIn: '15m',
+      user: {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        tenantId: user.tenantId,
+      },
+      tenant: user.tenant
+        ? {
+            id: user.tenant.id,
+            name: user.tenant.name,
+            slug: user.tenant.slug,
+            theme: user.tenant.theme,
+          }
+        : undefined,
     };
   }
 

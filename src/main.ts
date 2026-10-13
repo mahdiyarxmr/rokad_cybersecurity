@@ -4,9 +4,17 @@ import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
 import * as cookieParser from 'cookie-parser';
+import { randomUUID } from 'crypto';
 import { json, urlencoded } from 'express';
 import { AppModule } from './app.module';
 import { RedisIoAdapter } from './common/adapters/redis-io.adapter';
+import {
+  consumeRateLimit,
+  inspectJsonShape,
+  rateLimitForPath,
+  resolveJsonBodyLimit,
+  type RateBucket,
+} from './common/security/abuse-controls';
 import {
   isProduction,
   resolveCorsOrigins,
@@ -41,28 +49,32 @@ async function bootstrap() {
   });
 
   const enableSwagger = !production || configService.get<string>('ENABLE_SWAGGER') === 'true';
+  if (production) {
+    app.getHttpAdapter().getInstance().set('trust proxy', 1);
+  }
 
   app.use(
     helmet({
-      contentSecurityPolicy: enableSwagger
-        ? false
-        : {
-            directives: {
-              defaultSrc: ["'self'"],
-              scriptSrc: ["'self'"],
-              styleSrc: ["'self'", "'unsafe-inline'"],
-              imgSrc: ["'self'", 'data:', 'blob:'],
-              objectSrc: ["'none'"],
-              frameAncestors: ["'self'"],
-              baseUri: ["'self'"],
-            },
-          },
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: enableSwagger ? ["'self'", "'unsafe-inline'", "'unsafe-eval'"] : ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", 'data:', 'blob:'],
+          connectSrc: ["'self'"],
+          fontSrc: ["'self'", 'data:'],
+          objectSrc: ["'none'"],
+          frameAncestors: ["'none'"],
+          baseUri: ["'self'"],
+          formAction: ["'self'"],
+        },
+      },
       crossOriginResourcePolicy: { policy: 'cross-origin' },
       crossOriginEmbedderPolicy: false,
       hsts: production
         ? { maxAge: 31536000, includeSubDomains: true, preload: true }
         : false,
-      frameguard: { action: 'sameorigin' },
+      frameguard: { action: 'deny' },
       noSniff: true,
       referrerPolicy: { policy: 'no-referrer' },
     }),
@@ -74,17 +86,58 @@ async function bootstrap() {
     res.type('text/plain; charset=utf-8').send(SECURITY_TXT);
   });
 
-  app.use((_req: any, res: any, next: any) => {
+  app.use((req: any, res: any, next: any) => {
+    const incoming = req.headers['x-request-id'];
+    const requestId =
+      typeof incoming === 'string' && /^[\w-]{8,80}$/.test(incoming) ? incoming : randomUUID();
+    res.setHeader('X-Request-Id', requestId);
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
     res.setHeader('Vary', 'Authorization, Origin, x-tenant-id');
+    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
     next();
   });
 
-  const jsonLimit = configService.get<string>('JSON_BODY_LIMIT', '6mb');
+  const rateStore = new Map<string, RateBucket>();
+  app.use((req: any, res: any, next: any) => {
+    const url = req.originalUrl || req.url || '';
+    const rule = rateLimitForPath(url);
+    if (!rule) return next();
+    const ip = req.ip || req.socket?.remoteAddress || 'unknown';
+    const now = Date.now();
+    if (rateStore.size > 20_000) {
+      for (const [key, bucket] of rateStore) {
+        if (bucket.resetAt <= now) rateStore.delete(key);
+      }
+    }
+    const decision = consumeRateLimit(rateStore, `${ip}:${rule.name}`, now, rule.windowMs, rule.max);
+    if (!decision.allowed) {
+      res.setHeader('Retry-After', String(decision.retryAfterSeconds));
+      res.status(429).json({ success: false, statusCode: 429, message: 'تعداد درخواست بیش از حد مجاز است' });
+      return;
+    }
+    next();
+  });
+
+  app.use((req: any, res: any, next: any) => {
+    const url = req.originalUrl || req.url || '';
+    const heavy = /import|export|bulk|report/.test(url);
+    res.setTimeout(heavy ? 120_000 : 30_000);
+    next();
+  });
+
+  const jsonLimit = resolveJsonBodyLimit(configService.get<string>('JSON_BODY_LIMIT'));
   app.use(json({ limit: jsonLimit }));
-  app.use(urlencoded({ extended: true, limit: jsonLimit }));
+  app.use(urlencoded({ extended: true, limit: jsonLimit, parameterLimit: 100 }));
+  app.use((req: any, res: any, next: any) => {
+    const problem = inspectJsonShape(req.body);
+    if (problem) {
+      res.status(400).json({ success: false, statusCode: 400, message: 'ساختار بدنه درخواست مجاز نیست' });
+      return;
+    }
+    next();
+  });
 
   app.use((req: any, _res: any, next: any) => {
     if (req.url === '/health' || req.url.startsWith('/health/')) {
@@ -141,6 +194,7 @@ async function bootstrap() {
     logger.log('Swagger is disabled');
   }
 
+  app.enableShutdownHooks();
   const port = process.env.PORT || 3000;
   await app.listen(port, '0.0.0.0');
   logger.log(`Rokad API listening on 0.0.0.0:${port}`);

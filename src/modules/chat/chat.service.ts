@@ -332,7 +332,7 @@ export class ChatService {
   async getActiveUser(userId: string) {
     return this.prisma.user.findFirst({
       where: { id: userId, status: 'ACTIVE' },
-      select: { id: true, tenantId: true, role: true, isPlatformAdmin: true },
+      select: { id: true, tenantId: true, role: true, isPlatformAdmin: true, mustChangePassword: true },
     });
   }
 

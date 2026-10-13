@@ -10,12 +10,6 @@ import * as crypto from 'crypto';
 import * as argon2 from 'argon2';
 import { PrismaService } from '../../prisma/prisma.service';
 import { BruteForceService } from '../../common/redis/brute-force.service';
-import {
-  getTenantPasswordPrefix,
-  stripLeadingZero,
-  normalizeNationalCode,
-} from '../../common/utils/credential.util';
-import { normalizePersianDigits } from '../../common/utils/jalali.util';
 
 @Injectable()
 export class PasswordVaultService {
@@ -288,21 +282,11 @@ export class PasswordVaultService {
     // Reset brute-force counter on success
     await this.bruteForceService.recordLoginSuccess(bruteForceIdentifier, ipAddress);
 
-    // If user doesn't have encryptedPassword yet, attempt on-the-fly recovery using standard credentials
-    let encryptedPassword = targetUser.encryptedPassword;
+    const encryptedPassword = targetUser.encryptedPassword;
     if (!encryptedPassword) {
-      const recoveredPlaintext = await this.tryRecoverPlaintext(targetUser, tenant);
-      if (recoveredPlaintext && tenant.vaultPublicKey) {
-        encryptedPassword = this.encryptWithPublicKey(tenant.vaultPublicKey, recoveredPlaintext);
-        await this.prisma.user.update({
-          where: { id: targetUser.id },
-          data: { encryptedPassword },
-        });
-      } else {
-        throw new BadRequestException(
-          'رمز عبور این کاربر به صورت برگشت‌ناپذیر ثبت شده است و نسخه رمزنگاری‌شده در گاوصندوق موجود نیست. لطفاً از گزینه «تنظیم رمز جدید» استفاده فرمایید.',
-        );
-      }
+      throw new BadRequestException(
+        'نسخه رمزنگاری‌شده این رمز در گاوصندوق موجود نیست. رمز را بازنشانی کنید؛ بازیابی از روی شناسه کاربر انجام نمی‌شود.',
+      );
     }
 
     // Decrypt RSA private key with master key
@@ -345,70 +329,8 @@ export class PasswordVaultService {
   }
 
   /**
-   * Helper to guess standard generated credentials for existing members
-   */
-  private async tryRecoverPlaintext(user: any, tenant: any): Promise<string | null> {
-    const prefix = getTenantPasswordPrefix(tenant);
-    const cleanNationalCode = normalizeNationalCode(user.nationalId);
-    const strippedNational = stripLeadingZero(user.nationalId);
-    const cleanPhone = normalizePersianDigits(user.phone).replace(/\D/g, '').trim();
-    const cleanUsername = user.username?.trim();
-
-    const candidates = new Set<string>();
-
-    if (strippedNational) {
-      candidates.add(`${prefix}${strippedNational}`);
-      candidates.add(`b${strippedNational}`);
-      candidates.add(`g${strippedNational}`);
-      candidates.add(`c${strippedNational}`);
-      candidates.add(`p${strippedNational}`);
-      candidates.add(strippedNational);
-    }
-
-    if (cleanNationalCode) {
-      candidates.add(`${prefix}${cleanNationalCode}`);
-      candidates.add(cleanNationalCode);
-      candidates.add(`p${cleanNationalCode}`);
-    }
-
-    if (cleanUsername) {
-      candidates.add(cleanUsername);
-      candidates.add(`${prefix}${cleanUsername}`);
-      candidates.add(`p${cleanUsername}`);
-      const strippedUsername = stripLeadingZero(cleanUsername);
-      if (strippedUsername) {
-        candidates.add(`${prefix}${strippedUsername}`);
-        candidates.add(`p${strippedUsername}`);
-        candidates.add(strippedUsername);
-      }
-    }
-
-    if (cleanPhone) {
-      candidates.add(cleanPhone);
-      candidates.add(`p${cleanPhone}`);
-      const strippedPhone = cleanPhone.replace(/^0+/, '');
-      candidates.add(strippedPhone);
-    }
-
-    // Do not guess published or universal passwords. Recovery is limited to
-    // identifiers that already belong to this user.
-
-    for (const candidate of candidates) {
-      try {
-        const isValid = await argon2.verify(user.passwordHash, candidate);
-        if (isValid) {
-          return candidate;
-        }
-      } catch {
-        // ignore format issues
-      }
-    }
-
-    return null;
-  }
-
-  /**
-   * Backfill encrypted passwords for all existing members of a tenant
+   * Count members whose password envelope is already stored.
+   * Plaintext is never guessed from usernames or national IDs.
    */
   async backfillTenantPasswords(tenantId: string) {
     const tenant = await this.prisma.tenant.findUnique({
@@ -417,43 +339,27 @@ export class PasswordVaultService {
 
     if (!tenant) throw new NotFoundException('مدرسه یافت نشد');
 
-    // Ensure vault is initialized
-    const { publicKey } = await this.ensureTenantVault(tenantId);
+    await this.ensureTenantVault(tenantId);
 
     const users = await this.prisma.user.findMany({
       where: { tenantId },
     });
 
-    let recovered = 0;
     let alreadyEncrypted = 0;
     let unrecovered = 0;
 
     for (const user of users) {
-      if (user.encryptedPassword) {
-        alreadyEncrypted++;
-        continue;
-      }
-
-      const plaintext = await this.tryRecoverPlaintext(user, tenant);
-      if (plaintext) {
-        const encrypted = this.encryptWithPublicKey(publicKey, plaintext);
-        await this.prisma.user.update({
-          where: { id: user.id },
-          data: { encryptedPassword: encrypted },
-        });
-        recovered++;
-      } else {
-        unrecovered++;
-      }
+      if (user.encryptedPassword) alreadyEncrypted++;
+      else unrecovered++;
     }
 
     this.logger.log(
-      `Tenant ${tenantId} backfill completed: Total=${users.length}, Recovered=${recovered}, AlreadyEncrypted=${alreadyEncrypted}, Unrecovered=${unrecovered}`,
+      `Tenant ${tenantId} vault coverage: Total=${users.length}, AlreadyEncrypted=${alreadyEncrypted}, Missing=${unrecovered}`,
     );
 
     return {
       total: users.length,
-      recovered,
+      recovered: 0,
       alreadyEncrypted,
       unrecovered,
     };

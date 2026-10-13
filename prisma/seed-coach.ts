@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import * as argon2 from 'argon2';
+import { localSeedPassword } from './local-seed-password';
 
 const prisma = new PrismaClient();
 
@@ -15,7 +16,7 @@ async function main() {
     return;
   }
 
-  const defaultPass = await argon2.hash('RokadPass2026!');
+  const defaultPass = await argon2.hash(localSeedPassword('coach'));
 
   // Create or update coach user
   const coachUser = await prisma.user.upsert({

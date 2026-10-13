@@ -16,7 +16,7 @@ export interface JwtPayload {
   tenantId: string;
   role: string;
   isPlatformAdmin: boolean;
-  tokenUse?: 'access' | 'download' | '2fa';
+  tokenUse?: 'access' | 'download' | '2fa' | 'password_change';
   requiresTwoFactor?: boolean;
   username?: string;
   email?: string;
@@ -91,6 +91,11 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     if (payload?.requiresTwoFactor || payload?.tokenUse === '2fa') {
       throw new UnauthorizedException('تکمیل احراز هویت دومرحله‌ای الزامی است');
     }
+    const passwordChangeRequest =
+      req?.method === 'POST' && /\/auth\/change-password\/?$/.test((url || '').split('?')[0]);
+    if (payload?.tokenUse === 'password_change' && !passwordChangeRequest) {
+      throw new UnauthorizedException('تا پیش از تغییر رمز، دسترسی به سایر بخش‌ها ممکن نیست');
+    }
     if (!payload?.sub) {
       throw new UnauthorizedException('توکن دسترسی نامعتبر است');
     }
@@ -117,6 +122,12 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     }
     if (payload.tenantId && payload.tenantId !== user.tenantId && !user.isPlatformAdmin) {
       throw new UnauthorizedException('نشست با مرکز آموزشی حساب هم‌خوان نیست');
+    }
+    if (user.mustChangePassword && payload.tokenUse !== 'password_change') {
+      throw new UnauthorizedException('تغییر رمز عبور الزامی است');
+    }
+    if (user.mustChangePassword && payload.tokenUse === 'password_change' && !passwordChangeRequest) {
+      throw new UnauthorizedException('تا پیش از تغییر رمز، دسترسی به سایر بخش‌ها ممکن نیست');
     }
 
     return {

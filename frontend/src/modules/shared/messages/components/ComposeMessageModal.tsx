@@ -259,14 +259,10 @@ export const ComposeMessageModal: React.FC<Props> = ({
 
     const file = files[0];
     const isVideo = file.type.startsWith('video/') || /\.(mp4|mov|webm|mkv|avi)$/i.test(file.name);
-    const maxSizeBytes = isVideo ? 150 * 1024 * 1024 : 50 * 1024 * 1024;
+    const maxSizeBytes = 32 * 1024 * 1024;
 
     if (file.size > maxSizeBytes) {
-      toast.error(
-        isVideo
-          ? 'حداکثر حجم مجاز هر ویدیو ۱۵۰ مگابایت می‌باشد'
-          : 'حداکثر حجم مجاز هر فایل ۵۰ مگابایت می‌باشد',
-      );
+      toast.error('حداکثر حجم مجاز هر فایل ۳۲ مگابایت است');
       return;
     }
 

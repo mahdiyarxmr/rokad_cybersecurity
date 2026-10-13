@@ -122,10 +122,10 @@ export class StorageController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @ApiConsumes('multipart/form-data')
-  @ApiOperation({ summary: 'آپلود مستقیم فایل و ویدیو (تا سقف ۱۵۰ مگابایت)' })
+  @ApiOperation({ summary: 'آپلود مستقیم فایل (تا سقف ۳۲ مگابایت)' })
   @UseInterceptors(
     FileInterceptor('file', {
-      limits: { fileSize: 150 * 1024 * 1024 }, // 150MB
+      limits: { fileSize: 32 * 1024 * 1024, files: 1 },
     }),
   )
   async uploadFile(

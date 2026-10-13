@@ -70,7 +70,7 @@ export class FeeImportController {
 
   @Post('allocation/preview')
   @RequirePermissions(AppPermission.FINANCE_FEE_IMPORT)
-  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024 } }))
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 2 * 1024 * 1024, files: 1 } }))
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'پیش‌نمایش و اعتبارسنجی سرور برای فایل اکسل تخصیص شهریه' })
   async previewAllocation(
@@ -115,7 +115,7 @@ export class FeeImportController {
 
   @Post('payments/preview')
   @RequirePermissions(AppPermission.FINANCE_FEE_IMPORT)
-  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024 } }))
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 2 * 1024 * 1024, files: 1 } }))
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'پیش‌نمایش و اعتبارسنجی سرور برای فایل اکسل پرداخت‌ها' })
   async previewPayments(

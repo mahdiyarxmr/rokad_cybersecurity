@@ -94,8 +94,11 @@ const normalizeDigits = (val: any): string => {
  * Parses an uploaded Excel file (.xlsx or .xls) into a list of questions with client-side validation.
  */
 export const parseQuestionsFromExcel = async (file: File): Promise<ParsedQuestionRow[]> => {
+  if (file.size > 2 * 1024 * 1024) {
+    throw new Error('حجم فایل اکسل نباید بیشتر از ۲ مگابایت باشد.');
+  }
   const data = await file.arrayBuffer();
-  const workbook = read(data);
+  const workbook = read(data, { sheetRows: 2001, cellFormula: false, cellHTML: false, bookVBA: false });
   const sheetName = workbook.SheetNames[0];
   const sheet = workbook.Sheets[sheetName];
 
@@ -104,6 +107,10 @@ export const parseQuestionsFromExcel = async (file: File): Promise<ParsedQuestio
   }
 
   const rawRows: any[] = utils.sheet_to_json(sheet);
+
+  if (rawRows.length > 2000) {
+    throw new Error('تعداد سطرهای فایل اکسل بیش از حد مجاز است.');
+  }
 
   if (!rawRows || rawRows.length === 0) {
     throw new Error('فایل اکسل انتخاب‌شده فاقد داده یا سطر است.');

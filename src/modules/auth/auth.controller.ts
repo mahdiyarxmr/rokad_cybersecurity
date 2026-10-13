@@ -224,9 +224,11 @@ export class AuthController {
   async changePassword(
     @CurrentUser('id') userId: string,
     @Body() dto: ChangePasswordDto,
-    @Headers('x-refresh-token') currentRefreshToken?: string,
+    @Headers('x-refresh-token') currentRefreshToken: string | undefined,
+    @Ip() ip: string,
+    @Headers('user-agent') userAgent: string,
   ) {
-    return this.authService.changePassword(userId, dto, currentRefreshToken);
+    return this.authService.changePassword(userId, dto, currentRefreshToken, ip, userAgent);
   }
 
   // ==========================================
@@ -323,7 +325,7 @@ export class AuthController {
     );
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, StepUpGuard)
   @Roles(Role.SUPER_ADMIN, Role.SCHOOL_ADMIN)
   @ApiBearerAuth()
   @Post('vault/setup-key')
@@ -341,7 +343,7 @@ export class AuthController {
     );
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, StepUpGuard)
   @Roles(Role.SUPER_ADMIN, Role.SCHOOL_ADMIN)
   @ApiBearerAuth()
   @Post('vault/backfill')

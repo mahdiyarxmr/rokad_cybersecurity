@@ -446,10 +446,18 @@ export const MembersPage: React.FC = () => {
     try {
       setError(null);
       setExcelResult(null);
+      if (file.size > 2 * 1024 * 1024) {
+        setError('حجم فایل اکسل نباید بیشتر از ۲ مگابایت باشد.');
+        return;
+      }
       const data = await file.arrayBuffer();
-      const workbook = read(data);
+      const workbook = read(data, { sheetRows: 2001, cellFormula: false, cellHTML: false, bookVBA: false });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const rows = utils.sheet_to_json(sheet);
+      if (rows.length > 2000) {
+        setError('تعداد سطرهای فایل بیش از حد مجاز است.');
+        return;
+      }
       if (!rows || rows.length === 0) {
         setError('فایل اکسل انتخاب‌شده فاقد داده یا سطر است.');
         return;

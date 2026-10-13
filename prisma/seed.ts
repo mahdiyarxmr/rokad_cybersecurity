@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import * as argon2 from 'argon2';
+import { localSeedPassword } from './local-seed-password';
 
 const prisma = new PrismaClient();
 
@@ -236,7 +237,7 @@ async function main() {
     },
   });
 
-  const boysAdminPasswordHash = await argon2.hash('RokadBoysPass2026!');
+  const boysAdminPasswordHash = await argon2.hash(localSeedPassword('boys-admin'));
   const boysAdmin = await prisma.user.upsert({
     where: {
       tenantId_phone: {
@@ -294,7 +295,7 @@ async function main() {
     },
   });
 
-  const coachPasswordHash = await argon2.hash('RokadPass2026!');
+  const coachPasswordHash = await argon2.hash(localSeedPassword('coach'));
   const boysCoach = await prisma.user.upsert({
     where: {
       tenantId_phone: {
@@ -380,7 +381,7 @@ async function main() {
     },
   });
 
-  const girlsAdminPasswordHash = await argon2.hash('RokadGirlsPass2026!');
+  const girlsAdminPasswordHash = await argon2.hash(localSeedPassword('girls-admin'));
   const girlsAdmin = await prisma.user.upsert({
     where: {
       tenantId_phone: {
@@ -474,7 +475,7 @@ async function main() {
   });
 
   // 6. Seed Teacher
-  const defaultPass = await argon2.hash('RokadPass2026!');
+  const defaultPass = await argon2.hash(localSeedPassword('sample-user'));
 
   const teacherUser = await prisma.user.upsert({
     where: {

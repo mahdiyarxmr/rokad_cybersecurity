@@ -16,6 +16,11 @@ const needles = [
   'rokad_default_blind_index_pepper_2026',
   'rokad_audit_default_pepper_2026',
   'RokadAdminPass2026!',
+  'RokadPass2026!',
+  'RokadParent2026!',
+  'RokadBoysPass2026!',
+  'RokadGirlsPass2026!',
+  'Rokad1404!',
   'incidents.betterstack.com/api/v1/heartbeat/',
 ];
 

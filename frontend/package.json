@@ -30,7 +30,7 @@
     "tailwind-merge": "^2.6.1",
     "tailwindcss-animate": "^1.0.7",
     "workbox-window": "^7.4.1",
-    "xlsx": "^0.18.5",
+    "xlsx": "npm:@e965/xlsx@0.20.3",
     "zod": "^3.25.76",
     "zustand": "^5.0.15"
   },

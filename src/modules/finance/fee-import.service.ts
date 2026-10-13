@@ -6,6 +6,7 @@ import {
 import { PrismaService } from '../../prisma/prisma.service';
 import { Prisma, PaymentMethod, CheckStatus } from '@prisma/client';
 import * as XLSX from 'xlsx';
+import { readBoundedSheet } from '../../common/security/excel-guard';
 import {
   ConfirmFeeAllocationImportDto,
   ConfirmFeePaymentImportDto,
@@ -78,10 +79,7 @@ export class FeeImportService {
     fileBuffer: Buffer,
     feePlanId?: string,
   ) {
-    const wb = XLSX.read(fileBuffer, { type: 'buffer' });
-    const sheetName = wb.SheetNames[0];
-    const sheet = wb.Sheets[sheetName];
-    const rawData: any[] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+    const rawData: any[] = readBoundedSheet(fileBuffer);
 
     if (rawData.length < 2) {
       throw new BadRequestException('فایل اکسل ارسالی خالی است یا سطر داده ندارد');
@@ -324,10 +322,7 @@ export class FeeImportService {
 
   // 5. Preview Excel for Payments (Cash / Cheque Validation & Double-Entry Check)
   async previewPaymentExcel(tenantId: string, fileBuffer: Buffer) {
-    const wb = XLSX.read(fileBuffer, { type: 'buffer' });
-    const sheetName = wb.SheetNames[0];
-    const sheet = wb.Sheets[sheetName];
-    const rawData: any[] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+    const rawData: any[] = readBoundedSheet(fileBuffer);
 
     if (rawData.length < 2) {
       throw new BadRequestException('فایل اکسل ارسالی خالی است');

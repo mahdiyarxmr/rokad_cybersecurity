@@ -73,7 +73,7 @@ describe('MembersService - Unified Credentials Generation', () => {
     await prisma.user.delete({ where: { id: student.userId } });
   });
 
-  it('createStudent: auto-generates username=nationalCode and password=g+nationalCode for girls school', async () => {
+  it('createStudent: does not store a password derived from the national code', async () => {
     const testCode = '0098765432';
     // Cleanup if existed
     await prisma.studentProfile.deleteMany({ where: { nationalCode: testCode } });
@@ -89,9 +89,9 @@ describe('MembersService - Unified Credentials Generation', () => {
     expect(student.user.username).toBe(testCode);
     expect(student.user.nationalId).toBe(testCode);
 
-    // Verify password is g + testCode
-    const isValidPass = await argon2.verify(student.user.passwordHash, `g${testCode}`);
-    expect(isValidPass).toBe(true);
+    const derived = await argon2.verify(student.user.passwordHash, `g${testCode}`).catch(() => false);
+    expect(derived).toBe(false);
+    expect(student.user.mustChangePassword).toBe(true);
 
     // Cleanup
     await prisma.studentProfile.delete({ where: { id: student.id } });

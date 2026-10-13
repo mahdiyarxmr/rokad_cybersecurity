@@ -1,4 +1,7 @@
+import { randomBytes } from 'crypto';
+import { BadRequestException } from '@nestjs/common';
 import { normalizePersianDigits } from './jalali.util';
+import { isPublishedInsecureValue } from '../security/security-policy';
 
 export interface TenantCredentialContext {
   slug?: string | null;
@@ -8,10 +11,8 @@ export interface TenantCredentialContext {
 }
 
 /**
- * تعیین پیش‌وند رمز عبور بر اساس نوع شعبه مرکز آموزشی:
- * - 'b' برای هنرستان پسرانه (Boys)
- * - 'g' برای هنرستان دخترانه (Girls)
- * - 'c' برای کالج رکاد (College)
+ * برچسب شعبه فقط برای سازگاری تماس‌گیرنده‌های قدیمی است.
+ * از این مقدار هرگز برای ساخت رمز عبور استفاده نکنید.
  */
 export function getTenantPasswordPrefix(
   tenant?: TenantCredentialContext | null,
@@ -23,7 +24,6 @@ export function getTenantPasswordPrefix(
   const name = (tenant.name || '').toLowerCase();
   const type = (tenant.type || '').toUpperCase();
 
-  // 1. Girls School
   if (
     slug.includes('girl') ||
     slug.includes('dokhtar') ||
@@ -33,7 +33,6 @@ export function getTenantPasswordPrefix(
     return 'g';
   }
 
-  // 2. College
   if (
     slug.includes('college') ||
     theme === 'COLLEGE' ||
@@ -43,7 +42,6 @@ export function getTenantPasswordPrefix(
     return 'c';
   }
 
-  // 3. Boys School (default fallback for vocational boys)
   if (
     slug.includes('boy') ||
     slug.includes('pesar') ||
@@ -56,22 +54,12 @@ export function getTenantPasswordPrefix(
   return 'b';
 }
 
-/**
- * نرمال‌سازی کد ملی (تبدیل ارقام فارسی/عربی، حذف فواصل و کاراکترهای غیرعددی)
- */
-export function normalizeNationalCode(
-  code?: string | number | null,
-): string {
+export function normalizeNationalCode(code?: string | number | null): string {
   if (code === null || code === undefined) return '';
   const digitsOnly = normalizePersianDigits(code).replace(/\D/g, '');
   return digitsOnly.trim();
 }
 
-/**
- * حذف صفرهای اول کد ملی (یا عدد) جهت ساخت نام کاربری و شماره استاندارد
- * - مثال: 0960158881 -> 960158881
- * - کدهای بدون صفر اول دست‌نخورده باقی می‌مانند: 6420024730 -> 6420024730
- */
 export function stripLeadingZero(code?: string | number | null): string {
   if (code === null || code === undefined) return '';
   const digitsOnly = normalizePersianDigits(code).replace(/\D/g, '');
@@ -79,11 +67,53 @@ export function stripLeadingZero(code?: string | number | null): string {
   return stripped || digitsOnly;
 }
 
+const PASSWORD_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%*';
+
+/** رمز تصادفی. الگوی «پیشوند + کد ملی/موبایل» دیگر تولید نمی‌شود. */
+export function generateRandomPassword(length = 16): string {
+  const size = Math.max(12, length);
+  let out = '';
+  while (out.length < size) {
+    const bytes = randomBytes(size);
+    for (const byte of bytes) {
+      if (byte >= 256 - (256 % PASSWORD_ALPHABET.length)) continue;
+      out += PASSWORD_ALPHABET[byte % PASSWORD_ALPHABET.length];
+      if (out.length === size) break;
+    }
+  }
+  return out;
+}
+
+function identifierForms(raw: string | number | null | undefined): string[] {
+  if (raw === null || raw === undefined) return [];
+  const text = String(raw).trim();
+  if (!text) return [];
+  const digits = normalizePersianDigits(text).replace(/\D/g, '');
+  const stripped = digits.replace(/^0+/, '') || digits;
+  return Array.from(new Set([text, digits, stripped].filter(Boolean)));
+}
+
 /**
- * تولید خودکار نام کاربری و رمز عبور یکپارچه:
- * - نام کاربری = کد ملی بدون صفر اول (کدهای بدون صفر بدون تغییر می‌مانند)
- * - رمز عبور = پیش‌وند شعبه (b / g / c) + کد ملی بدون صفر اول
+ * رمزهایی که از شناسهٔ کاربر ساخته می‌شوند، یا قبلاً در مخزن منتشر شده‌اند، قابل قبول نیستند.
  */
+export function isPredictablePassword(
+  password: string | null | undefined,
+  identifiers: Array<string | number | null | undefined> = [],
+): boolean {
+  const value = (password || '').trim();
+  if (!value || value.length < 8) return true;
+  if (isPublishedInsecureValue(value)) return true;
+  for (const raw of identifiers) {
+    for (const id of identifierForms(raw)) {
+      if (value === id) return true;
+      if (value.length === id.length + 1 && value.slice(1) === id && /^[bgcp]$/i.test(value[0])) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 export function generateUnifiedCredentials(params: {
   tenant?: TenantCredentialContext | null;
   nationalCode?: string | number | null;
@@ -95,19 +125,20 @@ export function generateUnifiedCredentials(params: {
   defaultPassword: string;
   finalPassword: string;
   prefix: 'b' | 'g' | 'c';
+  mustChangePassword: true;
 } {
   const prefix = getTenantPasswordPrefix(params.tenant);
   const cleanNationalCode = normalizeNationalCode(params.nationalCode);
   const strippedCode = stripLeadingZero(params.nationalCode);
   const cleanPhone = normalizePersianDigits(params.fallbackPhone).replace(/\D/g, '').trim();
-
-  const username = strippedCode || cleanPhone || `user_${Date.now()}`;
-  const defaultPassword = strippedCode
-    ? `${prefix}${strippedCode}`
-    : cleanPhone
-      ? `${prefix}${cleanPhone}`
-      : 'RokadPass2026!';
-  const finalPassword = params.customPassword?.trim() ? params.customPassword.trim() : defaultPassword;
+  const username = strippedCode || cleanPhone || `user_${randomBytes(4).toString('hex')}`;
+  const identifiers = [strippedCode, cleanNationalCode, cleanPhone, username];
+  const requested = params.customPassword?.trim() || '';
+  if (requested && isPredictablePassword(requested, identifiers)) {
+    throw new BadRequestException('رمز عبور نباید از شناسه کاربر یا الگوی قدیمی ساخته شود');
+  }
+  const defaultPassword = generateRandomPassword();
+  const finalPassword = requested || defaultPassword;
 
   return {
     username,
@@ -115,41 +146,26 @@ export function generateUnifiedCredentials(params: {
     defaultPassword,
     finalPassword,
     prefix,
+    mustChangePassword: true,
   };
 }
 
-/**
- * تولید شماره دانش‌آموزی استاندارد بر مبنای کد ملی بدون صفر:
- * طبق استاندارد آموزش و پرورش و سامانه‌های سیدا/سناد، شماره دانش‌آموزی معادل کد ملی بدون صفر اول (صفرهای سمت چپ) است.
- * مثال: 0012345678 -> 12345678
- * مثال: 0923456789 -> 923456789
- * در صورت عدم وجود کد ملی، از شماره همراه بدون صفر یا عدد تصادفی استفاده می‌شود.
- */
 export function deriveStudentCode(
   nationalCode?: string | number | null,
   fallbackPhone?: string | number | null,
 ): string {
   const strippedCode = stripLeadingZero(nationalCode);
-  if (strippedCode) {
-    return strippedCode;
-  }
+  if (strippedCode) return strippedCode;
 
   const cleanPhone = normalizePersianDigits(fallbackPhone)
     .replace(/\D/g, '')
     .replace(/^0+/, '')
     .trim();
-  if (cleanPhone) {
-    return cleanPhone;
-  }
+  if (cleanPhone) return cleanPhone;
 
-  return String(Math.floor(10000000 + Math.random() * 90000000));
+  return String(10000000 + (randomBytes(4).readUInt32BE(0) % 90000000));
 }
 
-/**
- * تولید خودکار شناسه و رمز عبور یکپارچه برای والد دانش‌آموز:
- * - نام کاربری سیستمی والد = p + کد ملی فرزند بدون صفر
- * - رمز عبور والد = پیش‌وند 'p' + کد ملی فرزند بدون صفر (مثال: p960158881)
- */
 export function generateParentCredentials(params: {
   studentNationalCode?: string | number | null;
   fallbackPhone?: string | number | null;
@@ -158,25 +174,26 @@ export function generateParentCredentials(params: {
   username: string;
   defaultPassword: string;
   finalPassword: string;
+  mustChangePassword: true;
 } {
   const strippedCode = stripLeadingZero(params.studentNationalCode);
   const cleanPhone = normalizePersianDigits(params.fallbackPhone).replace(/\D/g, '').trim();
-
   const username = strippedCode
     ? `p${strippedCode}`
     : cleanPhone
       ? `p${cleanPhone}`
-      : `parent_${Date.now()}`;
-  const defaultPassword = strippedCode
-    ? `p${strippedCode}`
-    : cleanPhone
-      ? `p${cleanPhone}`
-      : 'RokadParent2026!';
-  const finalPassword = params.customPassword?.trim() ? params.customPassword.trim() : defaultPassword;
+      : `parent_${randomBytes(4).toString('hex')}`;
+  const identifiers = [strippedCode, cleanPhone, username, params.studentNationalCode];
+  const requested = params.customPassword?.trim() || '';
+  if (requested && isPredictablePassword(requested, identifiers)) {
+    throw new BadRequestException('رمز عبور نباید از شناسه کاربر یا الگوی قدیمی ساخته شود');
+  }
+  const defaultPassword = generateRandomPassword();
 
   return {
     username,
     defaultPassword,
-    finalPassword,
+    finalPassword: requested || defaultPassword,
+    mustChangePassword: true,
   };
 }

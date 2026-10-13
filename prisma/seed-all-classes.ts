@@ -1,5 +1,6 @@
 import { PrismaClient, AttendanceStatus, Gender } from '@prisma/client';
 import * as argon2 from 'argon2';
+import { localSeedPassword } from './local-seed-password';
 
 const prisma = new PrismaClient();
 
@@ -214,7 +215,7 @@ async function main() {
 
   // 8. Seed Pool of Students for all classes
   console.log('👥 Seeding students and enrolling them into each classroom...');
-  const defaultPassword = await argon2.hash('RokadPass2026!');
+  const defaultPassword = await argon2.hash(localSeedPassword('class-seed'));
 
   const studentDataList = [
     // Class 101

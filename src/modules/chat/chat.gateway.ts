@@ -40,6 +40,8 @@ export class ChatGateway
   server: Server;
 
   private readonly logger = new Logger(ChatGateway.name);
+  private readonly socketsByIp = new Map<string, number>();
+  private readonly socketsByUser = new Map<string, number>();
 
   constructor(
     private readonly configService: ConfigService,
@@ -52,6 +54,14 @@ export class ChatGateway
   }
 
   async handleConnection(client: Socket) {
+    const ip = client.handshake.address || 'unknown';
+    const ipCount = this.socketsByIp.get(ip) || 0;
+    if (ipCount >= MAX_SOCKETS_PER_IP) {
+      client.disconnect(true);
+      return;
+    }
+    this.socketsByIp.set(ip, ipCount + 1);
+    client.data.ip = ip;
     try {
       const authHeader =
         client.handshake.auth?.token ||
@@ -68,13 +78,25 @@ export class ChatGateway
       );
 
       const payload = this.jwtService.verify(token, { secret });
-      if (!payload?.sub || payload.tokenUse === 'download' || payload.tokenUse === '2fa' || payload.requiresTwoFactor) {
+      if (
+        !payload?.sub ||
+        payload.tokenUse === 'download' ||
+        payload.tokenUse === '2fa' ||
+        payload.tokenUse === 'password_change' ||
+        payload.requiresTwoFactor
+      ) {
         throw new UnauthorizedException('توکن وب‌سوکت نامعتبر است');
       }
       const dbUser = await this.chatService.getActiveUser(payload.sub);
-      if (!dbUser) {
+      if (!dbUser || dbUser.mustChangePassword) {
         throw new UnauthorizedException('حساب کاربری وب‌سوکت معتبر نیست');
       }
+      const userCount = this.socketsByUser.get(dbUser.id) || 0;
+      if (userCount >= MAX_SOCKETS_PER_USER) {
+        throw new UnauthorizedException('تعداد اتصال همزمان بیش از حد مجاز است');
+      }
+      this.socketsByUser.set(dbUser.id, userCount + 1);
+      client.data.countedUser = dbUser.id;
       client.data.user = {
         id: dbUser.id,
         tenantId: dbUser.tenantId,
@@ -97,7 +119,32 @@ export class ChatGateway
   }
 
   handleDisconnect(client: Socket) {
+    const ip = client.data.ip;
+    if (ip) {
+      const next = (this.socketsByIp.get(ip) || 1) - 1;
+      if (next > 0) this.socketsByIp.set(ip, next);
+      else this.socketsByIp.delete(ip);
+    }
+    const userId = client.data.countedUser;
+    if (userId) {
+      const next = (this.socketsByUser.get(userId) || 1) - 1;
+      if (next > 0) this.socketsByUser.set(userId, next);
+      else this.socketsByUser.delete(userId);
+    }
     this.logger.log(`Client disconnected: ${client.id}`);
+  }
+
+  private allowEvent(client: Socket): boolean {
+    const now = Date.now();
+    const windowStart = client.data.eventWindow || now;
+    const count = windowStart + 60_000 < now ? 0 : client.data.eventCount || 0;
+    if (count >= MAX_EVENTS_PER_MINUTE) {
+      client.emit('error', { message: 'تعداد پیام‌های لحظه‌ای بیش از حد مجاز است' });
+      return false;
+    }
+    client.data.eventWindow = count === 0 ? now : windowStart;
+    client.data.eventCount = count + 1;
+    return true;
   }
 
   /**
@@ -109,7 +156,11 @@ export class ChatGateway
     @MessageBody() data: { channelId: string },
   ) {
     const user = client.data.user;
-    if (!user) return;
+    if (!user || !this.allowEvent(client)) return;
+    if (client.rooms.size >= MAX_ROOMS_PER_SOCKET) {
+      client.emit('error', { message: 'تعداد اتاق‌های این اتصال بیش از حد مجاز است' });
+      return { success: false, error: 'TOO_MANY_ROOMS' };
+    }
 
     const allowed = await this.chatService.verifyChannelMembership(
       user.tenantId,
@@ -134,7 +185,11 @@ export class ChatGateway
     @MessageBody() data: { classroomId: string },
   ) {
     const user = client.data.user;
-    if (!user) return;
+    if (!user || !this.allowEvent(client)) return;
+    if (client.rooms.size >= MAX_ROOMS_PER_SOCKET) {
+      client.emit('error', { message: 'تعداد اتاق‌های این اتصال بیش از حد مجاز است' });
+      return { success: false, error: 'TOO_MANY_ROOMS' };
+    }
 
     // Strict Authorization check against DB
     const isMember = await this.chatService.verifyClassroomMembership(
@@ -167,6 +222,12 @@ export class ChatGateway
       client.emit('error', { message: 'عدم احراز هویت' });
       return;
     }
+    if (!this.allowEvent(client)) return;
+    const content = typeof dto?.content === 'string' ? dto.content : '';
+    if (content.length > 4000) {
+      client.emit('error', { message: 'طول پیام بیش از حد مجاز است' });
+      return { success: false, error: 'MESSAGE_TOO_LARGE' };
+    }
 
     try {
       const savedMessage = await this.chatService.saveMessage(
@@ -196,7 +257,7 @@ export class ChatGateway
     @MessageBody() data: { channelId: string; isTyping: boolean },
   ) {
     const user = client.data.user;
-    if (!user) return;
+    if (!user || !this.allowEvent(client)) return;
 
     client.to(`channel:${data.channelId}`).emit('user_typing', {
       channelId: data.channelId,

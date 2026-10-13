@@ -1,12 +1,13 @@
 import { PrismaClient, DayOfWeek, UserRole, AttendanceStatus, DisciplinaryRewardType, GradeType } from '@prisma/client';
 import * as argon2 from 'argon2';
+import { localSeedPassword } from './local-seed-password';
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('🌱 Starting Comprehensive Seed for Gradebook & Classrooms Evaluation Testing...');
 
-  const passwordHash = await argon2.hash('Rokad1404!');
+  const passwordHash = await argon2.hash(localSeedPassword('gradebook-demo'));
 
   // 1. Get or Create Boys High School Tenant
   const school = await prisma.tenant.upsert({
@@ -177,9 +178,9 @@ async function main() {
   });
 
   console.log('✅ Accounts ready:');
-  console.log('   - مدیر: boysadmin / Rokad1404! (09121111111)');
-  console.log('   - معاون: boysvice / Rokad1404! (09121111119)');
-  console.log('   - دبیر: kazemi / Rokad1404! (09122222221)');
+  console.log('   - مدیر: boysadmin / (see seed log) (09121111111)');
+  console.log('   - معاون: boysvice / (see seed log) (09121111119)');
+  console.log('   - دبیر: kazemi / (see seed log) (09122222221)');
 
   // 5. Classrooms
   const class10NetA = await prisma.classroom.upsert({

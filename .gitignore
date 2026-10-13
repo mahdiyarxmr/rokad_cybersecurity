@@ -42,6 +42,7 @@ coverage/
 scratch/
 .tempmediaStorage/
 *.sql
+!prisma/migrations/**/*.sql
 *.xlsx
 .polls_dev_store.json
 .calendar_events_dev_store.json
