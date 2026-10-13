@@ -1,0 +1,17 @@
+name: Security checks
+
+on:
+  pull_request:
+  push:
+    branches: [main, arena/ab1d3c90-rokad-cybersecurity]
+
+jobs:
+  policy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Reject published secrets and run policy tests
+        run: npm run security:check

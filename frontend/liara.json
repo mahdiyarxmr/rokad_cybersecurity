@@ -1,0 +1,5 @@
+{
+  "$schema": "https://json.schemastore.org/liara.json",
+  "app": "rokad",
+  "platform": "react"
+}

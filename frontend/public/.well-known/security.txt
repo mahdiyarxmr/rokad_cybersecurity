@@ -1,0 +1,5 @@
+Contact: mailto:security@rokad.ir
+Preferred-Languages: fa, en
+Canonical: https://rokadschool.ir/.well-known/security.txt
+Policy: https://github.com/mahdiyarxmr/rokad_cybersecurity
+Expires: 2027-10-13T00:00:00.000Z

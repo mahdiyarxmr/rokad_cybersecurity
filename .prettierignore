@@ -1,0 +1,9 @@
+node_modules/
+dist/
+build/
+coverage/
+frontend/dev-dist/
+frontend/dist/
+*.log
+pnpm-lock.yaml
+package-lock.json

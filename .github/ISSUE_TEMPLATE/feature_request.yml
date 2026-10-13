@@ -1,0 +1,51 @@
+name: 💡 پیشنهاد قابلیت جدید (Feature Request)
+description: پیشنهاد قابلیت یا بهبود جدید برای پلتفرم رُکاد
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        پیشنهادات و ایده‌های شما به رشد و غنای پلتفرم رُکاد کمک شایانی می‌کند!
+
+  - type: input
+    id: feature-title
+    attributes:
+      label: عنوان پیشنهاد (Feature Title)
+      placeholder: افزودن گزارش مقایسه‌ای نمرات ترمی...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: دسته‌بندی قابلیت (Category)
+      options:
+        - "🎓 آموزش و آزمون‌ها (Academic)"
+        - "💼 حسابداری و امور مالی (Finance)"
+        - "🔒 امنیت و کنترل دسترسی (Security)"
+        - "📱 اپلیکیشن موبایل و PWA (Mobile)"
+        - "🏢 مدیریت سازمانی و گزارش‌گیری (Analytics & SaaS)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: چه مشکلی با این قابلیت برطرف می‌شود؟ (Problem Statement)
+      description: چالش فعلی که بدون این قابلیت با آن روبرو هستید چیست؟
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: راه‌حل یا رفتار پیشنهادی شما (Proposed Solution)
+      description: نحوه پیاده‌سازی یا تجربه کاربری پیشنهادی خود را شرح دهید.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: گزینه‌ها یا راه‌حل‌های جایگزین بررسی‌شده (Alternative Solutions)
+      description: آیا روش‌های دیگری برای دستیابی به این نتیجه در نظر گرفته‌اید؟

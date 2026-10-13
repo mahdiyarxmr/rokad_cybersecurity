@@ -1,0 +1,31 @@
+"area:backend":
+  - src/**/*
+  - nest-cli.json
+  - tsconfig.json
+
+"area:frontend":
+  - frontend/**/*
+
+"area:database":
+  - prisma/**/*
+
+"area:security":
+  - src/common/crypto/**/*
+  - src/common/guards/**/*
+  - src/modules/auth/**/*
+  - src/modules/audit-log/**/*
+  - .github/SECURITY.md
+
+"area:finance":
+  - src/modules/finance/**/*
+  - frontend/src/modules/school-admin/finance/**/*
+  - frontend/src/modules/student-parent/fees/**/*
+
+"area:docker":
+  - docker-compose.yml
+  - Dockerfile*
+
+"area:documentation":
+  - "*.md"
+  - docs/**/*
+  - .github/**/*.md

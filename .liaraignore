@@ -1,0 +1,13 @@
+node_modules/
+frontend/
+.git/
+.github/
+dist/
+logs/
+scratch/
+test/
+*.xlsx
+*.sql
+.env
+.DS_Store
+*.log

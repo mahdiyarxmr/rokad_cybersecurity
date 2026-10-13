@@ -1,0 +1,62 @@
+name: 🐛 گزارش باگ (Bug Report)
+description: گزارش بروز خطا یا رفتار غیرمنتظره در پلتفرم رُکاد
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        از اینکه به بهبود کیفیت پلتفرم رُکاد کمک می‌کنید سپاسگزاریم. لطفاً اطلاعات زیر را با دقت تکمیل نمایید.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: بخش مربوطه (Affected Component)
+      options:
+        - "🔒 امنیت و احراز هویت (Auth & 2FA)"
+        - "💼 امور مالی و خزانه‌داری چک (Finance & Cheques)"
+        - "🎓 آموزش و دفتر نمرات (Academic & LMS)"
+        - "💬 ارتباطات و چت (Realtime & Chat)"
+        - "🏢 عملیات چندمستأجره (SaaS & SuperAdmin)"
+        - "🖥️ فرانت‌اند و رابط کاربری (Frontend UI)"
+        - "⚙️ زیرساخت و داکر (Infra & Docker)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: شرح خطا (Bug Description)
+      description: رفتار مورد انتظار و رفتاری که در عمل رخ داده است را توضیح دهید.
+      placeholder: پس از کلیک بر روی دکمه ثبت پرداخت...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: مراحل بازتولید (Steps to Reproduce)
+      description: مراحلی که باید برای بازتولید خطا طی شوند:
+      value: |
+        1. رفتن به صفحه '...'
+        2. کلیک بر روی '....'
+        3. مشاهده خطای '....'
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: اطلاعات محیطی (Environment Details)
+      description: سیستم‌عامل، نسخه مرورگر، نسخه Node.js و غیره.
+      value: |
+        - OS: [e.g. macOS / Ubuntu / Windows]
+        - Browser: [e.g. Chrome 128 / Firefox]
+        - Node Version: [e.g. v22.x]
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: لاگ‌ها یا اسکرین‌شات‌ها (Logs or Screenshots)
+      description: پیام‌های کنسول یا اسکرین‌شات خطا را اینجا وارد کنید.
